@@ -106,11 +106,21 @@ class MobileActionManager {
     });
 
     const fileTableBody = document.getElementById("fileListBody");
+    const trashTableBody = document.getElementById("trashListBody");
+
     if (fileTableBody) {
       observer.observe(fileTableBody, { childList: true });
 
       // Add triggers to existing rows
       const existingRows = fileTableBody.querySelectorAll("tr");
+      existingRows.forEach(row => this.addActionTriggerToRow(row));
+    }
+
+    if (trashTableBody) {
+      observer.observe(trashTableBody, { childList: true });
+
+      // Add triggers to existing rows
+      const existingRows = trashTableBody.querySelectorAll("tr");
       existingRows.forEach(row => this.addActionTriggerToRow(row));
     }
   }
@@ -136,10 +146,18 @@ class MobileActionManager {
         const fileId = row.getAttribute("data-file-id");
         const isFolder = row.getAttribute("data-is-folder") === "true";
 
-        if (fileManager && fileManager.currentFiles) {
+        // Check if we're in recycle bin
+        const isRecycleBin = window.location.pathname.includes('recycle-bin');
+
+        if (isRecycleBin && recycleBinManager && recycleBinManager.trashedFiles) {
+          const file = recycleBinManager.trashedFiles.find(f => f.id === fileId);
+          if (file) {
+            this.showMobileActionMenu(file, isFolder, true);
+          }
+        } else if (fileManager && fileManager.currentFiles) {
           const file = fileManager.currentFiles.find(f => f.id === fileId);
           if (file) {
-            this.showMobileActionMenu(file, isFolder);
+            this.showMobileActionMenu(file, isFolder, false);
           }
         }
       });
@@ -148,7 +166,7 @@ class MobileActionManager {
     }
   }
 
-  showMobileActionMenu(file, isFolder) {
+  showMobileActionMenu(file, isFolder, isRecycleBin = false) {
     this.currentFile = file;
 
     // Update menu title
@@ -157,8 +175,8 @@ class MobileActionManager {
       title.textContent = file.name;
     }
 
-    // Update action buttons based on file type
-    this.updateMobileActionButtons(file, isFolder);
+    // Update action buttons based on file type and context
+    this.updateMobileActionButtons(file, isFolder, isRecycleBin);
 
     // Show menu
     this.mobileActionMenu.style.display = "block";
@@ -181,22 +199,36 @@ class MobileActionManager {
     this.currentFile = null;
   }
 
-  updateMobileActionButtons(file, isFolder) {
-    const previewBtn = this.mobileActionMenu.querySelector(
-      '[data-action="preview"]'
-    );
-    const copyLinkBtn = this.mobileActionMenu.querySelector(
-      '[data-action="copy-link"]'
-    );
+  updateMobileActionButtons(file, isFolder, isRecycleBin = false) {
+    const previewBtn = this.mobileActionMenu.querySelector('[data-action="preview"]');
+    const downloadBtn = this.mobileActionMenu.querySelector('[data-action="download"]');
+    const renameBtn = this.mobileActionMenu.querySelector('[data-action="rename"]');
+    const copyLinkBtn = this.mobileActionMenu.querySelector('[data-action="copy-link"]');
+    const deleteBtn = this.mobileActionMenu.querySelector('[data-action="delete"]');
+    const restoreBtn = this.mobileActionMenu.querySelector('[data-action="restore"]');
+    const locateBtn = this.mobileActionMenu.querySelector('[data-action="locate"]');
+    const permanentDeleteBtn = this.mobileActionMenu.querySelector('[data-action="permanent-delete"]');
 
-    // Hide preview for folders
-    if (previewBtn) {
-      previewBtn.style.display = isFolder ? "none" : "block";
-    }
-
-    // Show/hide copy link based on availability
-    if (copyLinkBtn) {
-      copyLinkBtn.style.display = file.webViewLink ? "block" : "none";
+    if (isRecycleBin) {
+      // Recycle bin actions
+      if (previewBtn) previewBtn.style.display = "none";
+      if (downloadBtn) downloadBtn.style.display = "none";
+      if (renameBtn) renameBtn.style.display = "none";
+      if (copyLinkBtn) copyLinkBtn.style.display = "none";
+      if (deleteBtn) deleteBtn.style.display = "none";
+      if (restoreBtn) restoreBtn.style.display = "block";
+      if (locateBtn) locateBtn.style.display = "block";
+      if (permanentDeleteBtn) permanentDeleteBtn.style.display = "block";
+    } else {
+      // Normal file actions
+      if (previewBtn) previewBtn.style.display = isFolder ? "none" : "block";
+      if (downloadBtn) downloadBtn.style.display = "block";
+      if (renameBtn) renameBtn.style.display = "block";
+      if (copyLinkBtn) copyLinkBtn.style.display = file.webViewLink ? "block" : "none";
+      if (deleteBtn) deleteBtn.style.display = "block";
+      if (restoreBtn) restoreBtn.style.display = "none";
+      if (locateBtn) locateBtn.style.display = "none";
+      if (permanentDeleteBtn) permanentDeleteBtn.style.display = "none";
     }
   }
 
@@ -243,6 +275,24 @@ class MobileActionManager {
       case "delete":
         if (typeof fileManager !== "undefined" && fileManager) {
           fileManager.deleteFile(file.id, isFolder);
+        }
+        break;
+
+      // Recycle bin specific actions
+      case "restore":
+        if (typeof recycleBinManager !== "undefined" && recycleBinManager) {
+          recycleBinManager.restoreFile(file.id, file.name);
+        }
+        break;
+
+      case "locate":
+        // Show original location info
+        showToast(`Vị trí gốc: ${file.originalPath || 'Không rõ'}`, "info");
+        break;
+
+      case "permanent-delete":
+        if (typeof recycleBinManager !== "undefined" && recycleBinManager) {
+          recycleBinManager.permanentlyDeleteFile(file.id, file.name, isFolder);
         }
         break;
 

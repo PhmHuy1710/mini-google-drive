@@ -38,17 +38,23 @@
   <div class="main-content">
     <!-- Toolbar -->
     <div class="toolbar">
-      <button class="btn btn-back" id="backToMainBtn" title="Quay lại trang chính">
-        <span class="mdi mdi-arrow-left"></span> Quay lại
-      </button>
-      
-      <button class="btn btn-danger" id="emptyTrashBtn" title="Xóa vĩnh viễn tất cả">
-        <span class="mdi mdi-delete-forever"></span> Xóa tất cả
-      </button>
-      
-      <button class="btn btn-refresh" id="refreshTrashBtn" title="Làm mới">
-        <span class="mdi mdi-refresh"></span> Làm mới
-      </button>
+      <!-- Navigation Group -->
+      <div class="toolbar-group file-actions">
+        <button class="btn btn-back" id="backToMainBtn" title="Quay lại trang chính">
+          <span class="mdi mdi-arrow-left"></span> Quay lại
+        </button>
+      </div>
+
+      <!-- Trash Actions Group -->
+      <div class="toolbar-group file-actions">
+        <button class="btn btn-danger" id="emptyTrashBtn" title="Xóa vĩnh viễn tất cả">
+          <span class="mdi mdi-delete-forever"></span> Xóa tất cả
+        </button>
+
+        <button class="btn btn-refresh" id="refreshTrashBtn" title="Làm mới">
+          <span class="mdi mdi-refresh"></span> Làm mới
+        </button>
+      </div>
 
       <!-- Progress bar for operations -->
       <div class="progress-wrap" id="progressWrap" style="display: none;">
@@ -89,6 +95,30 @@
 
   <!-- Toast Container -->
   <div id="toast-container"></div>
+
+  <!-- Mobile Action Menu for Recycle Bin -->
+  <div class="mobile-action-menu" id="mobileActionMenu" style="display: none;">
+    <div class="mobile-action-menu-header">
+      <div class="mobile-action-menu-title" id="mobileActionTitle">Tác vụ file</div>
+      <button class="mobile-action-menu-close" id="mobileActionClose">
+        <span class="mdi mdi-close"></span>
+      </button>
+    </div>
+    <div class="mobile-action-menu-actions" id="mobileActionButtons">
+      <button class="mobile-action-btn restore" data-action="restore">
+        <span class="mdi mdi-restore"></span>
+        <span>Khôi phục</span>
+      </button>
+      <button class="mobile-action-btn locate" data-action="locate">
+        <span class="mdi mdi-map-marker"></span>
+        <span>Vị trí gốc</span>
+      </button>
+      <button class="mobile-action-btn delete" data-action="permanent-delete">
+        <span class="mdi mdi-delete-forever"></span>
+        <span>Xóa vĩnh viễn</span>
+      </button>
+    </div>
+  </div>
 
   <!-- Confirmation Modal -->
   <div class="modal-overlay" id="confirmModal" style="display: none;">
