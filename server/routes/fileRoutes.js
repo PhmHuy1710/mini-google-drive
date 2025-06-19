@@ -11,7 +11,7 @@ const router = express.Router();
 
 // Configure multer for file uploads
 const upload = multer({
-  dest: path.join(__dirname, config.upload.tempDir),
+  dest: config.upload.tempDir, // Use absolute path from config
   limits: {
     fileSize: config.upload.maxFileSize,
     files: config.upload.maxFiles,

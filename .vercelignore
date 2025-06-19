@@ -13,6 +13,7 @@ yarn-error.log*
 *.log
 temp/
 server/temp/
-Screenshot.png
-plan.md
-README.md
+scripts/
+*.png
+*.md
+!README.md

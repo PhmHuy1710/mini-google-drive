@@ -81,8 +81,12 @@ app.use(
 );
 
 // Create temp directory if it doesn't exist
-const tempDir = path.join(__dirname, "../temp");
-if (!fs.existsSync(tempDir)) {
+// Use /tmp for Vercel serverless functions, local path for development
+const tempDir = config.server.isVercel
+  ? "/tmp"
+  : path.join(__dirname, "../temp");
+
+if (!config.server.isVercel && !fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
 }
 

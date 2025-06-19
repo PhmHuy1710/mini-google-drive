@@ -1,30 +1,68 @@
 # Mini Google Drive 2.0
 
-Một ứng dụng quản lý file hiện đại sử dụng Google Drive API với giao diện thân thiện và nhiều tính năng mới.
+🌐 **Live Demo**: [https://mini-google-drive.vercel.app](https://mini-google-drive.vercel.app)
 
-## 🚀 Tính năng mới (Phiên bản 2.0)
+Một ứng dụng quản lý file hiện đại sử dụng Google Drive API với giao diện thân thiện, responsive design và nhiều tính năng nâng cao.
 
-### ✅ Đã hoàn thành
-- **🔒 Bảo mật**: Credentials được di chuyển ra file `.env`, thêm rate limiting, CORS, helmet
-- **📁 Đổi tên file/folder**: Click vào icon bút chì để đổi tên
-- **🔍 Tìm kiếm**: Search bar với highlight kết quả và định vị file
-- **🎨 UI/UX cải tiến**: Responsive design, animations mượt mà
-- **⚡ Performance**: Code được tách module, error handling tốt hơn
-- **⌨️ Keyboard shortcuts**: Ctrl+F (search), Ctrl+Shift+N/Insert (new folder), Esc (close), F5 (refresh)
+## ✨ Tính năng nổi bật
 
-### 🏗️ Cấu trúc mới
+### 🎯 **Core Features**
+- **📁 File Management**: Upload, download, rename, delete files và folders
+- **🔍 Advanced Search**: Tìm kiếm với filter theo loại file
+- **📱 Mobile-First Design**: Responsive hoàn toàn với touch support
+- **🗑️ Recycle Bin**: Khôi phục files đã xóa
+- **⚡ Real-time Updates**: Cập nhật trạng thái upload real-time
+
+### 🎨 **UI/UX Features**
+- **🌙 Dark/Light Mode**: Toggle theme với localStorage persistence
+- **📋 Grid/List View**: Chuyển đổi giữa grid và list layout
+- **📱 Mobile Action Menu**: Touch-friendly interface cho mobile
+- **🎭 Context Menu**: Right-click menu với keyboard shortcuts
+- **💫 Loading Skeletons**: Smooth loading experience
+- **🔔 Toast Notifications**: Modern notification system
+
+### 🛠️ **Advanced Features**
+- **✅ Multi-select**: Bulk operations với checkboxes
+- **🎯 File Type Filters**: Lọc theo Images, Documents, Videos, Audio
+- **🧭 Smart Breadcrumbs**: Navigation với dropdown cho deep folders
+- **⌨️ Keyboard Shortcuts**: Full keyboard navigation support
+- **📊 Storage Quota**: Real-time storage usage display
+
+## 🏗️ Cấu trúc dự án
+
 ```
 mini-google-drive/
-├── client/
-│   ├── js/           # JavaScript modules
-│   ├── css/          # Stylesheets  
-│   └── index.html    # Main HTML
-├── server/
-│   ├── config/       # Configuration
-│   ├── routes/       # API routes
-│   ├── utils/        # Utilities
-│   └── index.js      # Main server
-└── temp/             # Temporary upload files
+├── client/                    # Frontend Application
+│   ├── css/
+│   │   └── main.css          # Main stylesheet với dark/light theme
+│   ├── js/                   # Modular JavaScript (16 modules)
+│   │   ├── app.js            # Main application entry
+│   │   ├── fileManager.js    # File operations
+│   │   ├── uploadManager.js  # Upload handling
+│   │   ├── searchManager.js  # Search & filtering
+│   │   ├── dialogManager.js  # Modern dialogs
+│   │   ├── themeManager.js   # Dark/light theme
+│   │   ├── viewManager.js    # Grid/list view
+│   │   ├── contextMenuManager.js # Right-click menu
+│   │   ├── multiSelectManager.js # Bulk operations
+│   │   ├── mobileActionManager.js # Mobile interface
+│   │   ├── recycleBinManager.js   # Recycle bin
+│   │   └── ... (6 more modules)
+│   ├── index.html            # Main page
+│   └── recycle-bin.html      # Recycle bin page
+├── server/                   # Backend API
+│   ├── config/
+│   │   └── config.js         # Environment configuration
+│   ├── routes/
+│   │   └── fileRoutes.js     # API endpoints
+│   ├── utils/
+│   │   └── driveService.js   # Google Drive integration
+│   └── index.js              # Express server
+├── .env.example              # Environment template
+├── .vercelignore             # Vercel deployment rules
+├── package.json              # Dependencies & scripts
+├── README.md                 # Documentation
+└── vercel.json               # Vercel configuration
 ```
 
 ## 📋 Cài đặt
@@ -80,40 +118,112 @@ npm start
 
 Ứng dụng sẽ chạy tại `http://localhost:3001`
 
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+Ứng dụng đã được tối ưu cho Vercel deployment:
+
+1. **Push code lên GitHub**
+2. **Import project vào Vercel**
+3. **Set Environment Variables** trong Vercel Dashboard:
+   ```
+   GOOGLE_CLIENT_ID=your_client_id
+   GOOGLE_CLIENT_SECRET=your_client_secret
+   GOOGLE_REFRESH_TOKEN=your_refresh_token
+   SESSION_SECRET=your_session_secret
+   NODE_ENV=production
+   ```
+4. **Deploy!**
+
+**Live Demo**: [https://mini-google-drive.vercel.app](https://mini-google-drive.vercel.app)
+
+### Features tối ưu cho Production:
+- ✅ **Serverless Functions** với Vercel
+- ✅ **Environment Variables** security
+- ✅ **CORS & Security Headers** configured
+- ✅ **File Upload** với /tmp directory support
+- ✅ **Rate Limiting** protection
+- ✅ **Error Handling** comprehensive
+
 ## 🎯 Sử dụng
 
-### Tính năng chính
-- **Upload file**: Kéo thả hoặc click nút "Tải lên tệp"
-- **Upload folder**: Click "Tải lên thư mục"  
-- **Tạo thư mục**: Click "Tạo thư mục" hoặc Ctrl+Shift+N hoặc Insert
-- **Đổi tên**: Hover vào file/folder và click icon bút chì
-- **Tìm kiếm**: Gõ vào search box hoặc Ctrl+F
-- **Download**: Click icon download
-- **Xóa**: Click icon xóa (có xác nhận)
+### 📱 **Interface Features**
+- **🎨 Theme Toggle**: Click icon moon/sun để chuyển dark/light mode
+- **📋 View Toggle**: Click icon grid/list để chuyển đổi layout
+- **🔍 Smart Search**: Search với file type filters (All, Images, Documents, etc.)
+- **📱 Mobile Menu**: Long-press trên mobile để mở action menu
+- **🎭 Context Menu**: Right-click để mở context menu với shortcuts
 
-### Keyboard shortcuts
-- `Ctrl + F`: Focus vào search box
-- `Ctrl + Shift + N`: Tạo thư mục mới (tránh conflict với browser)
-- `Insert`: Tạo thư mục mới (phím thay thế)
-- `Esc`: Đóng modal hoặc clear search
-- `F5`: Refresh dữ liệu
+### 📁 **File Operations**
+- **📤 Upload Files**: Drag & drop hoặc click "Tải lên tệp"
+- **📂 Upload Folders**: Click "Tải lên thư mục" với folder structure
+- **➕ Create Folder**: Click "Tạo thư mục" hoặc keyboard shortcuts
+- **✏️ Rename**: Click icon edit hoặc context menu
+- **📥 Download**: Click download icon hoặc context menu
+- **🗑️ Delete**: Click delete icon → moves to Recycle Bin
+- **♻️ Restore**: Từ Recycle Bin page
+
+### ⌨️ **Keyboard Shortcuts**
+- `Ctrl + F`: Focus search box
+- `Ctrl + Shift + N` / `Insert`: Create new folder
+- `Esc`: Close dialogs/clear search
+- `F5`: Refresh file list
+- `Delete`: Delete selected files
+- `Enter`: Open folder/download file
+- `Space`: Toggle selection (multi-select mode)
 
 ## 🔧 API Endpoints
 
-### Files
-- `GET /api/files?parentId=xxx` - List files
-- `POST /api/upload` - Upload file
+### 📁 **File Management**
+- `GET /api/files?parentId=xxx` - List files in folder
+- `POST /api/upload` - Upload single file
 - `GET /api/download/:id` - Download file
-- `DELETE /api/delete/:id` - Delete file
-- `PUT /api/rename/:id` - Rename file
+- `DELETE /api/delete/:id` - Move to trash
+- `PUT /api/rename/:id` - Rename file/folder
 
-### Folders
-- `POST /api/create-folder` - Create folder
-- `GET /api/folderinfo/:id` - Get folder info
+### 📂 **Folder Operations**
+- `POST /api/create-folder` - Create new folder
+- `GET /api/folderinfo/:id` - Get folder information
 
-### Search & Storage
-- `GET /api/search?q=xxx` - Search files
-- `GET /api/storage` - Get storage quota
+### 🔍 **Search & Storage**
+- `GET /api/search?q=xxx` - Search files and folders
+- `GET /api/storage` - Get storage quota information
+- `GET /api/upload-config` - Get upload configuration
+
+### 🗑️ **Recycle Bin**
+- `GET /api/trash` - List trashed files
+- `POST /api/restore/:id` - Restore from trash
+- `DELETE /api/permanent-delete/:id` - Permanently delete
+- `DELETE /api/empty-trash` - Empty entire trash
+
+## 🛠️ Tech Stack
+
+### **Frontend**
+- **Vanilla JavaScript ES6+** - 16 modular components
+- **CSS3** - Custom properties, flexbox, grid
+- **HTML5** - Semantic markup
+- **Material Design Icons** - Icon system
+- **Responsive Design** - Mobile-first approach
+
+### **Backend**
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **Google APIs** - Drive integration
+- **Multer** - File upload handling
+- **Express Validator** - Input validation
+
+### **Security & Performance**
+- **Helmet** - Security headers
+- **CORS** - Cross-origin protection
+- **Rate Limiting** - API protection
+- **Compression** - Response compression
+- **Session Management** - Secure sessions
+
+### **Deployment**
+- **Vercel** - Serverless deployment
+- **Environment Variables** - Secure configuration
+- **Serverless Functions** - Auto-scaling
 
 ## 🔐 Bảo mật
 
@@ -160,21 +270,41 @@ limits: {
 ### Debug mode
 Đặt `NODE_ENV=development` trong `.env` để xem chi tiết lỗi.
 
-## 🚧 Roadmap (Những gì sẽ làm tiếp)
+## 🎯 Development Status
 
-### Phase 2 (2-3 tuần tới)
-- [ ] Dark mode toggle
-- [ ] File preview (ảnh, PDF, video)
-- [ ] Multi-select với checkbox
-- [ ] Copy/Move file giữa folders
-- [ ] Grid view option
-- [ ] Better mobile experience
+### ✅ **Phase 1: Core Features (COMPLETED)**
+- ✅ File upload/download/delete/rename
+- ✅ Folder management
+- ✅ Google Drive API integration
+- ✅ Search functionality
+- ✅ Security implementation
 
-### Phase 3 (1-2 tháng tới)  
-- [ ] Multi-user support
+### ✅ **Phase 2: UI/UX Enhancement (COMPLETED)**
+- ✅ Dark/Light mode toggle
+- ✅ Grid/List view options
+- ✅ Multi-select with checkboxes
+- ✅ Context menu system
+- ✅ Mobile-responsive design
+- ✅ Loading skeletons
+- ✅ Toast notifications
+- ✅ Modern dialog system
+
+### 🔄 **Phase 3: Advanced Features (IN PROGRESS)**
+- ✅ Recycle Bin functionality
+- ✅ File type filters
+- ✅ Smart breadcrumb navigation
+- ✅ Mobile action menu
+- ❌ File preview (images, PDFs, videos)
+- ❌ Copy/Move files between folders
+- ❌ Undo/Redo operations
+
+### 🚀 **Phase 4: Future Enhancements**
+- [ ] PWA support (offline functionality)
 - [ ] File versioning
 - [ ] Real-time collaboration
-- [ ] Offline support (PWA)
+- [ ] Multi-user support
+- [ ] Advanced file sharing
+- [ ] Performance optimizations (pagination, lazy loading)
 
 ## 📄 License
 
@@ -190,5 +320,19 @@ Mọi contribution đều được chào đón! Vui lòng:
 
 ---
 
-**Phát triển bởi**: phmhuy1710
-**Phiên bản**: 2.0.0  
+## 📊 **Project Stats**
+
+- **🌟 Version**: 2.0.0 (Production Ready)
+- **📅 Last Updated**: December 2024
+- **🚀 Live Demo**: [mini-google-drive.vercel.app](https://mini-google-drive.vercel.app)
+- **📱 Mobile Support**: ✅ Fully Responsive
+- **🌙 Dark Mode**: ✅ Available
+- **♿ Accessibility**: ✅ Keyboard Navigation
+- **🔒 Security**: ✅ Production Grade
+
+## 👨‍💻 **Developer**
+
+**Phát triển bởi**: [phmhuy1710](https://github.com/PhmHuy1710)
+**Repository**: [mini-google-drive](https://github.com/PhmHuy1710/mini-google-drive)
+**Tech Stack**: Node.js + Express + Vanilla JS + Google Drive API
+**Deployment**: Vercel Serverless Functions

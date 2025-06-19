@@ -19,7 +19,7 @@ const config = {
   upload: {
     maxFileSize: 5 * 1024 * 1024 * 1024, // 5GB
     maxFiles: 10, // Max 10 files per request
-    tempDir: "../temp/", // Relative to server directory
+    tempDir: process.env.VERCEL === "1" ? "/tmp/" : "../temp/", // Use /tmp for Vercel
   },
   rateLimit: {
     windowMs: 15 * 60 * 1000, // 15 minutes

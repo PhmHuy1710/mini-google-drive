@@ -7,8 +7,7 @@
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
     "build": "echo 'No build step required'",
-    "vercel-build": "echo 'Vercel build complete'",
-    "check-deployment": "node scripts/check-deployment.js"
+    "vercel-build": "echo 'Vercel build complete'"
   },
   "dependencies": {
     "express": "^5.1.0",
