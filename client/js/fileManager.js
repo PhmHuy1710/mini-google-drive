@@ -236,12 +236,86 @@ class FileManager {
     if (!this.breadcrumbs.length) return;
 
     bc.innerHTML = "";
-    this.breadcrumbs.forEach((b, i) => {
-      if (i > 0) bc.innerHTML += `<span class="mdi mdi-chevron-right"></span>`;
-      if (i === this.breadcrumbs.length - 1) {
-        bc.innerHTML += `<span class="breadcrumb-current">${b.name}</span>`;
-      } else {
-        bc.innerHTML += `<span class="breadcrumb-link" data-breadcrumb-index="${i}">${b.name}</span>`;
+
+    // Add breadcrumb dropdown for quick navigation if there are multiple levels
+    if (this.breadcrumbs.length > 2) {
+      bc.innerHTML += `
+        <div class="breadcrumb-dropdown">
+          <button class="breadcrumb-dropdown-btn" id="breadcrumbDropdownBtn">
+            <span class="mdi mdi-dots-horizontal"></span>
+          </button>
+          <div class="breadcrumb-dropdown-menu" id="breadcrumbDropdownMenu">
+            ${this.breadcrumbs
+              .slice(0, -2)
+              .map(
+                (b, i) => `
+              <div class="breadcrumb-dropdown-item" data-breadcrumb-index="${i}">
+                <span class="mdi mdi-folder"></span>
+                <span>${b.name}</span>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        </div>
+        <span class="mdi mdi-chevron-right"></span>
+      `;
+
+      // Show last 2 breadcrumbs normally
+      const visibleBreadcrumbs = this.breadcrumbs.slice(-2);
+      visibleBreadcrumbs.forEach((b, i) => {
+        const actualIndex = this.breadcrumbs.length - 2 + i;
+        if (i > 0)
+          bc.innerHTML += `<span class="mdi mdi-chevron-right"></span>`;
+        if (i === visibleBreadcrumbs.length - 1) {
+          bc.innerHTML += `<span class="breadcrumb-current">${b.name}</span>`;
+        } else {
+          bc.innerHTML += `<span class="breadcrumb-link" data-breadcrumb-index="${actualIndex}">${b.name}</span>`;
+        }
+      });
+    } else {
+      // Normal breadcrumb rendering for short paths
+      this.breadcrumbs.forEach((b, i) => {
+        if (i > 0)
+          bc.innerHTML += `<span class="mdi mdi-chevron-right"></span>`;
+        if (i === this.breadcrumbs.length - 1) {
+          bc.innerHTML += `<span class="breadcrumb-current">${b.name}</span>`;
+        } else {
+          bc.innerHTML += `<span class="breadcrumb-link" data-breadcrumb-index="${i}">${b.name}</span>`;
+        }
+      });
+    }
+
+    // Setup dropdown events
+    this.setupBreadcrumbDropdown();
+  }
+
+  setupBreadcrumbDropdown() {
+    const dropdownBtn = document.getElementById("breadcrumbDropdownBtn");
+    const dropdownMenu = document.getElementById("breadcrumbDropdownMenu");
+
+    if (!dropdownBtn || !dropdownMenu) return;
+
+    // Toggle dropdown
+    dropdownBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      dropdownMenu.classList.toggle("show");
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", e => {
+      if (!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+        dropdownMenu.classList.remove("show");
+      }
+    });
+
+    // Handle dropdown item clicks
+    dropdownMenu.addEventListener("click", e => {
+      const item = e.target.closest(".breadcrumb-dropdown-item");
+      if (item) {
+        const index = parseInt(item.getAttribute("data-breadcrumb-index"));
+        this.openFolderByBreadcrumb(index);
+        dropdownMenu.classList.remove("show");
       }
     });
   }
@@ -299,7 +373,15 @@ class FileManager {
   }
 
   async renameFile(fileId, oldName) {
-    const newName = prompt("Nhập tên mới:", oldName);
+    const newName = await dialogManager.showPrompt({
+      title: "Đổi tên",
+      message: "Nhập tên mới:",
+      defaultValue: oldName,
+      placeholder: "Tên file/thư mục...",
+      confirmText: "Đổi tên",
+      cancelText: "Hủy",
+    });
+
     if (!newName || newName === oldName) return;
 
     showToast("Đang đổi tên...", "info");

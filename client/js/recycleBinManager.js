@@ -8,6 +8,11 @@ class RecycleBinManager {
   init() {
     this.setupEventListeners();
     this.loadTrashedFiles();
+
+    // Initialize mobile action manager for recycle bin
+    if (typeof mobileActionManager !== "undefined") {
+      this.setupMobileActions();
+    }
   }
 
   setupEventListeners() {
@@ -91,6 +96,19 @@ class RecycleBinManager {
     this.isLoading = true;
     this.showProgress("Đang tải danh sách thùng rác...");
 
+    // Show skeleton loading
+    const tableWrapper = document.querySelector(".table-wrapper");
+    if (tableWrapper && typeof skeletonManager !== "undefined") {
+      // Hide the actual table
+      const trashTable = document.getElementById("trashTable");
+      if (trashTable) {
+        trashTable.style.display = "none";
+      }
+
+      // Show skeleton
+      skeletonManager.showFileListSkeleton(tableWrapper, 6);
+    }
+
     try {
       const response = await fetch("/api/trash");
 
@@ -99,10 +117,22 @@ class RecycleBinManager {
       }
 
       this.trashedFiles = await response.json();
+
+      // Hide skeleton before rendering
+      if (typeof skeletonManager !== "undefined") {
+        skeletonManager.hideSkeleton("file-table");
+      }
+
       this.renderTrashedFiles();
     } catch (error) {
       console.error("Error loading trashed files:", error);
       showToast("Lỗi tải danh sách thùng rác!", "error");
+
+      // Hide skeleton on error
+      if (typeof skeletonManager !== "undefined") {
+        skeletonManager.hideSkeleton("file-table");
+      }
+
       this.showEmptyState();
     } finally {
       this.isLoading = false;
@@ -135,6 +165,11 @@ class RecycleBinManager {
     tbody.innerHTML = this.trashedFiles
       .map(file => this.renderTrashedFileRow(file))
       .join("");
+
+    // Setup mobile actions for new rows
+    if (typeof mobileActionManager !== "undefined") {
+      this.setupMobileActionsForRows();
+    }
   }
 
   renderTrashedFileRow(file) {
@@ -150,7 +185,7 @@ class RecycleBinManager {
         </td>
         <td class="col-time">${trashedDate}</td>
         <td class="col-size">${file.size ? formatSize(file.size) : ""}</td>
-        <td>
+        <td class="col-action">
           <div class="action-group">
             <button class="btn-action btn-restore mdi mdi-restore"
                     title="Khôi phục"
@@ -176,6 +211,11 @@ class RecycleBinManager {
     if (emptyNote && table) {
       emptyNote.style.display = "block";
       table.style.display = "none";
+    }
+
+    // Also hide any remaining skeletons
+    if (typeof skeletonManager !== "undefined") {
+      skeletonManager.hideSkeleton("file-table");
     }
   }
 
@@ -342,6 +382,41 @@ class RecycleBinManager {
     if (modal) {
       modal.style.display = "none";
     }
+  }
+
+  setupMobileActions() {
+    // Setup mobile action event listeners
+    if (typeof mobileActionManager !== "undefined") {
+      // Override mobile action execution for recycle bin
+      const originalExecuteMobileAction =
+        mobileActionManager.executeMobileAction.bind(mobileActionManager);
+      mobileActionManager.executeMobileAction = action => {
+        const file = mobileActionManager.getCurrentFile();
+        if (!file) return;
+
+        switch (action) {
+          case "restore":
+            this.restoreFile(file.id, file.name);
+            break;
+          case "delete-forever":
+            this.permanentlyDeleteFile(file.id, file.name, file.isFolder);
+            break;
+          default:
+            // Fall back to original implementation for other actions
+            originalExecuteMobileAction(action);
+        }
+      };
+    }
+  }
+
+  setupMobileActionsForRows() {
+    // Add mobile action triggers to each row
+    const rows = document.querySelectorAll("#trashTable tbody tr");
+    rows.forEach(row => {
+      if (typeof mobileActionManager !== "undefined") {
+        mobileActionManager.addActionTriggerToRow(row);
+      }
+    });
   }
 }
 

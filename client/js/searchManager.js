@@ -8,8 +8,8 @@ class SearchManager {
   }
 
   setupSearchBox() {
-    // Add search box to toolbar
-    const toolbar = document.querySelector(".toolbar");
+    // Add search box and filters to toolbar
+    const toolbar = document.querySelector(".toolbar-secondary");
     const searchContainer = document.createElement("div");
     searchContainer.className = "search-container";
     searchContainer.innerHTML = `
@@ -18,13 +18,25 @@ class SearchManager {
         <input type="text" id="searchInput" placeholder="Tìm kiếm file, thư mục..." />
         <button id="searchClear" class="search-clear mdi mdi-close" style="display: none;"></button>
       </div>
+      <div class="filter-container">
+        <select id="fileTypeFilter" class="file-type-filter">
+          <option value="all">Tất cả</option>
+          <option value="folder">Thư mục</option>
+          <option value="image">Hình ảnh</option>
+          <option value="document">Tài liệu</option>
+          <option value="video">Video</option>
+          <option value="audio">Âm thanh</option>
+        </select>
+      </div>
     `;
 
-    // Insert after create folder button
-    const createBtn = toolbar.querySelector(".btn-create");
-    createBtn.parentNode.insertBefore(searchContainer, createBtn.nextSibling);
+    // Insert at the beginning of toolbar-secondary
+    if (toolbar) {
+      toolbar.insertBefore(searchContainer, toolbar.firstChild);
+    }
 
     this.setupSearchEvents();
+    this.setupFilterEvents();
   }
 
   setupSearchEvents() {
@@ -61,6 +73,102 @@ class SearchManager {
         if (term) this.performSearch(term);
       }
     });
+  }
+
+  setupFilterEvents() {
+    const fileTypeFilter = document.getElementById("fileTypeFilter");
+
+    fileTypeFilter.addEventListener("change", e => {
+      const selectedType = e.target.value;
+      this.applyFileTypeFilter(selectedType);
+    });
+  }
+
+  applyFileTypeFilter(type) {
+    if (this.isSearchMode) {
+      // Apply filter to search results
+      const filteredResults = this.filterByType(this.lastSearchResults, type);
+      this.renderSearchResults(filteredResults, this.searchTerm);
+    } else {
+      // Apply filter to current folder files
+      const currentFiles = fileManager.currentFiles || [];
+      const filteredFiles = this.filterByType(currentFiles, type);
+      this.renderFilteredFiles(filteredFiles, type);
+    }
+  }
+
+  renderFilteredFiles(files, filterType) {
+    const tbody = document.getElementById("fileListBody");
+    const emptyNote = document.getElementById("emptyNote");
+    const breadcrumbs = document.getElementById("breadcrumbs");
+
+    // Update breadcrumbs to show filter mode
+    if (filterType !== "all") {
+      const filterName = this.getFilterDisplayName(filterType);
+      breadcrumbs.innerHTML = `
+        <span class="mdi mdi-filter"></span>
+        <span class="breadcrumb-current">Lọc: ${filterName}</span>
+        <button class="btn-back-filter" id="backFromFilterBtn">
+          <span class="mdi mdi-arrow-left"></span> Quay lại
+        </button>
+      `;
+
+      // Add event listener for back button
+      const backBtn = document.getElementById("backFromFilterBtn");
+      if (backBtn) {
+        backBtn.addEventListener("click", () => this.clearFilter());
+      }
+    } else {
+      fileManager.renderBreadcrumbs();
+    }
+
+    tbody.innerHTML = "";
+
+    if (!files.length) {
+      emptyNote.style.display = "block";
+      emptyNote.innerHTML =
+        filterType === "all"
+          ? "Chưa có tệp hay thư mục nào"
+          : `Không có ${this.getFilterDisplayName(
+              filterType
+            ).toLowerCase()} nào`;
+      return;
+    }
+
+    emptyNote.style.display = "none";
+
+    // Sort files using sortManager
+    const sortedFiles = sortManager.sortFiles(files);
+
+    tbody.innerHTML = sortedFiles
+      .map(file => fileManager.renderFileRow(file))
+      .join("");
+
+    // Notify multi-select manager about file list update
+    multiSelectManager.onFileListRendered();
+  }
+
+  getFilterDisplayName(type) {
+    const names = {
+      all: "Tất cả",
+      folder: "Thư mục",
+      image: "Hình ảnh",
+      document: "Tài liệu",
+      video: "Video",
+      audio: "Âm thanh",
+    };
+    return names[type] || "Tất cả";
+  }
+
+  clearFilter() {
+    const fileTypeFilter = document.getElementById("fileTypeFilter");
+    if (fileTypeFilter) {
+      fileTypeFilter.value = "all";
+    }
+
+    // Return to normal folder view
+    fileManager.renderFiles(fileManager.currentFolderId);
+    fileManager.renderBreadcrumbs();
   }
 
   async performSearch(term) {

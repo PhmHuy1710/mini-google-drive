@@ -27,7 +27,16 @@ class MobileActionManager {
     // Close mobile action menu
     const closeBtn = document.getElementById("mobileActionClose");
     if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
+      closeBtn.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.hideMobileActionMenu();
+      });
+
+      // Add touch support for mobile
+      closeBtn.addEventListener("touchend", e => {
+        e.preventDefault();
+        e.stopPropagation();
         this.hideMobileActionMenu();
       });
     }
@@ -67,6 +76,17 @@ class MobileActionManager {
 
     // Click outside to close
     document.addEventListener("click", e => {
+      if (
+        this.isMenuVisible &&
+        !this.mobileActionMenu.contains(e.target) &&
+        !e.target.closest(".mobile-action-trigger")
+      ) {
+        this.hideMobileActionMenu();
+      }
+    });
+
+    // Touch outside to close (for mobile)
+    document.addEventListener("touchend", e => {
       if (
         this.isMenuVisible &&
         !this.mobileActionMenu.contains(e.target) &&
@@ -136,7 +156,23 @@ class MobileActionManager {
         const fileId = row.getAttribute("data-file-id");
         const isFolder = row.getAttribute("data-is-folder") === "true";
 
-        if (fileManager && fileManager.currentFiles) {
+        // Check if we're on the recycle bin page
+        const isRecycleBin = window.location.pathname.includes("recycle-bin");
+
+        if (isRecycleBin && typeof recycleBinManager !== "undefined") {
+          // For recycle bin, get file from recycleBinManager
+          const file = recycleBinManager.trashedFiles.find(
+            f => f.id === fileId
+          );
+          if (file) {
+            this.showMobileActionMenu(file, isFolder);
+          }
+        } else if (
+          typeof fileManager !== "undefined" &&
+          fileManager &&
+          fileManager.currentFiles
+        ) {
+          // For main page, get file from fileManager
           const file = fileManager.currentFiles.find(f => f.id === fileId);
           if (file) {
             this.showMobileActionMenu(file, isFolder);
@@ -160,8 +196,9 @@ class MobileActionManager {
     // Update action buttons based on file type
     this.updateMobileActionButtons(file, isFolder);
 
-    // Show menu
+    // Show menu with backdrop
     this.mobileActionMenu.style.display = "block";
+    document.body.style.overflow = "hidden"; // Prevent background scrolling
     setTimeout(() => {
       this.mobileActionMenu.classList.add("show");
     }, 10);
@@ -173,6 +210,7 @@ class MobileActionManager {
     if (!this.isMenuVisible) return;
 
     this.mobileActionMenu.classList.remove("show");
+    document.body.style.overflow = ""; // Restore scrolling
     setTimeout(() => {
       this.mobileActionMenu.style.display = "none";
     }, 300);
@@ -182,21 +220,49 @@ class MobileActionManager {
   }
 
   updateMobileActionButtons(file, isFolder) {
-    const previewBtn = this.mobileActionMenu.querySelector(
-      '[data-action="preview"]'
-    );
-    const copyLinkBtn = this.mobileActionMenu.querySelector(
-      '[data-action="copy-link"]'
-    );
+    // Check if we're on the recycle bin page
+    const isRecycleBin = window.location.pathname.includes("recycle-bin");
 
-    // Hide preview for folders
-    if (previewBtn) {
-      previewBtn.style.display = isFolder ? "none" : "block";
-    }
+    if (isRecycleBin) {
+      // Show only recycle bin actions
+      const allButtons =
+        this.mobileActionMenu.querySelectorAll(".mobile-action-btn");
+      allButtons.forEach(btn => {
+        const action = btn.getAttribute("data-action");
+        if (action === "restore" || action === "delete-forever") {
+          btn.style.display = "block";
+        } else {
+          btn.style.display = "none";
+        }
+      });
+    } else {
+      // Regular file actions
+      const previewBtn = this.mobileActionMenu.querySelector(
+        '[data-action="preview"]'
+      );
+      const copyLinkBtn = this.mobileActionMenu.querySelector(
+        '[data-action="copy-link"]'
+      );
+      const restoreBtn = this.mobileActionMenu.querySelector(
+        '[data-action="restore"]'
+      );
+      const deleteForeverBtn = this.mobileActionMenu.querySelector(
+        '[data-action="delete-forever"]'
+      );
 
-    // Show/hide copy link based on availability
-    if (copyLinkBtn) {
-      copyLinkBtn.style.display = file.webViewLink ? "block" : "none";
+      // Hide recycle bin specific actions
+      if (restoreBtn) restoreBtn.style.display = "none";
+      if (deleteForeverBtn) deleteForeverBtn.style.display = "none";
+
+      // Hide preview for folders
+      if (previewBtn) {
+        previewBtn.style.display = isFolder ? "none" : "block";
+      }
+
+      // Show/hide copy link based on availability
+      if (copyLinkBtn) {
+        copyLinkBtn.style.display = file.webViewLink ? "block" : "none";
+      }
     }
   }
 
@@ -213,7 +279,13 @@ class MobileActionManager {
           typeof previewManager !== "undefined" &&
           previewManager
         ) {
-          previewManager.previewFile(file, fileManager.currentFiles || []);
+          const currentFiles =
+            typeof fileManager !== "undefined" &&
+            fileManager &&
+            fileManager.currentFiles
+              ? fileManager.currentFiles
+              : [];
+          previewManager.previewFile(file, currentFiles);
         }
         break;
 
@@ -303,10 +375,18 @@ class MobileActionManager {
   handleBulkDelete() {
     if (typeof multiSelectManager !== "undefined" && multiSelectManager) {
       const selectedCount = multiSelectManager.selectedFiles.size;
-      if (confirm(`Bạn có chắc muốn xóa ${selectedCount} mục đã chọn?`)) {
-        multiSelectManager.deleteSelected();
-        this.exitBulkMode();
-      }
+
+      dialogManager.showConfirm({
+        title: "Xác nhận xóa",
+        message: `Bạn có chắc muốn xóa ${selectedCount} mục đã chọn?`,
+        type: "danger",
+        confirmText: "Xóa",
+        cancelText: "Hủy",
+        onConfirm: () => {
+          multiSelectManager.deleteSelected();
+          this.exitBulkMode();
+        },
+      });
     }
   }
 

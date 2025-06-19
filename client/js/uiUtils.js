@@ -182,40 +182,27 @@ async function fetchStorage() {
 }
 
 // Create folder modal
-function promptCreateFolder() {
-  if (!document.getElementById("modalCreateFolder")) {
-    const modal = document.createElement("div");
-    modal.className = "modal-bg";
-    modal.id = "modalCreateFolder";
-    modal.innerHTML = `
-      <div class="modal">
-        <div class="modal-title"><span class="mdi mdi-folder-plus-outline"></span> Tạo thư mục mới</div>
-        <input id="newFolderName" type="text" placeholder="Tên thư mục...">
-        <div class="modal-actions">
-          <button class="btn btn-primary" onclick="submitCreateFolder()">Tạo</button>
-          <button class="btn btn-cancel" onclick="closeModalCreateFolder()">Hủy</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  }
+async function promptCreateFolder() {
+  const folderName = await dialogManager.showPrompt({
+    title: "Tạo thư mục mới",
+    message: "Nhập tên thư mục:",
+    placeholder: "Tên thư mục...",
+    confirmText: "Tạo",
+    cancelText: "Hủy",
+  });
 
-  document.getElementById("newFolderName").value = "";
-  document.getElementById("modalCreateFolder").style.display = "flex";
-  setTimeout(() => document.getElementById("newFolderName").focus(), 100);
+  if (folderName && folderName.trim()) {
+    await fileManager.createFolder(folderName.trim());
+  }
 }
 
+// Legacy functions for backward compatibility (can be removed later)
 function closeModalCreateFolder() {
-  document.getElementById("modalCreateFolder").style.display = "none";
+  // No longer needed with new dialog system
 }
 
-async function submitCreateFolder() {
-  let name = document.getElementById("newFolderName").value.trim();
-  if (!name) {
-    showToast("Vui lòng nhập tên thư mục!", "error");
-    return;
+async function submitCreateFolder(name) {
+  if (name) {
+    await fileManager.createFolder(name);
   }
-
-  closeModalCreateFolder();
-  await fileManager.createFolder(name);
 }

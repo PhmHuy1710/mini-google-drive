@@ -38,32 +38,39 @@
   <div class="main-content">
     <!-- Toolbar -->
     <div class="toolbar">
-      <label class="upload-label upload-file" title="Tải lên tệp">
-        <span class="mdi mdi-upload"></span> Tải lên tệp
-        <input type="file" id="fileInput" multiple>
-      </label>
-      
-      <label class="upload-label upload-folder" title="Tải lên thư mục">
-        <span class="mdi mdi-folder-upload"></span> Tải lên thư mục
-        <input type="file" id="folderInput" webkitdirectory directory multiple>
-      </label>
-      
-      <button class="btn btn-create" id="createFolderBtn">
-        <span class="mdi mdi-folder-plus-outline"></span> Tạo thư mục
-      </button>
+      <!-- Primary Actions Group -->
+      <div class="toolbar-group toolbar-primary">
+        <label class="upload-label upload-file" title="Tải lên tệp">
+          <span class="mdi mdi-upload"></span> Tải lên tệp
+          <input type="file" id="fileInput" multiple>
+        </label>
 
-      <button class="btn btn-recycle" id="recycleBinBtn" title="Thùng rác">
-        <span class="mdi mdi-delete"></span> Thùng rác
-      </button>
+        <label class="upload-label upload-folder" title="Tải lên thư mục">
+          <span class="mdi mdi-folder-upload"></span> Tải lên thư mục
+          <input type="file" id="folderInput" webkitdirectory directory multiple>
+        </label>
 
-      <div class="view-toggle-container">
-        <button class="btn btn-view-toggle" id="viewToggleBtn" title="Chuyển đổi chế độ xem">
-          <span class="mdi mdi-view-list" id="viewToggleIcon"></span>
+        <button class="btn btn-create" id="createFolderBtn">
+          <span class="mdi mdi-folder-plus-outline"></span> Tạo thư mục
         </button>
       </div>
 
-      <!-- Search will be added here by searchManager -->
-      
+      <!-- Secondary Actions Group -->
+      <div class="toolbar-group toolbar-secondary">
+        <button class="btn btn-recycle" id="recycleBinBtn" title="Thùng rác">
+          <span class="mdi mdi-delete"></span>
+        </button>
+
+        <div class="view-toggle-container">
+          <button class="btn btn-view-toggle" id="viewToggleBtn" title="Chuyển đổi chế độ xem">
+            <span class="mdi mdi-view-list" id="viewToggleIcon"></span>
+          </button>
+        </div>
+
+        <!-- Search will be added here by searchManager -->
+      </div>
+
+      <!-- Progress Bar -->
       <div class="progress-wrap" id="progressWrap">
         <div class="progress-bar" id="progressBar"></div>
         <span class="progress-text" id="progressText"></span>
@@ -82,17 +89,19 @@
     </div>
 
     <!-- File List Table -->
-    <table class="file-list" id="fileTable">
-      <thead>
-        <tr>
-          <th class="col-name">Tên</th>
-          <th class="col-time">Ngày cập nhật</th>
-          <th class="col-size">Dung lượng</th>
-          <th class="col-action">Tác vụ</th>
-        </tr>
-      </thead>
-      <tbody id="fileListBody"></tbody>
-    </table>
+    <div class="table-wrapper">
+      <table class="file-list" id="fileTable">
+        <thead>
+          <tr>
+            <th class="col-name">Tên</th>
+            <th class="col-time">Ngày cập nhật</th>
+            <th class="col-size">Dung lượng</th>
+            <th class="col-action">Tác vụ</th>
+          </tr>
+        </thead>
+        <tbody id="fileListBody"></tbody>
+      </table>
+    </div>
 
     <!-- File Grid View -->
     <div class="file-grid" id="fileGrid" style="display: none;">
@@ -100,8 +109,24 @@
     </div>
 
     <!-- Empty State -->
-    <div class="empty-note" id="emptyNote" style="display: none;">
-      Chưa có tệp hay thư mục nào
+    <div class="empty-state" id="emptyNote" style="display: none;">
+      <div class="empty-state-illustration">
+        <span class="mdi mdi-folder-open-outline"></span>
+      </div>
+      <div class="empty-state-content">
+        <h3 class="empty-state-title">Thư mục trống</h3>
+        <p class="empty-state-message">Chưa có tệp hay thư mục nào trong đây</p>
+        <div class="empty-state-actions">
+          <label class="btn btn-primary empty-state-btn" for="fileInput">
+            <span class="mdi mdi-upload"></span>
+            Tải lên tệp
+          </label>
+          <button class="btn btn-secondary empty-state-btn" onclick="promptCreateFolder()">
+            <span class="mdi mdi-folder-plus"></span>
+            Tạo thư mục
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -192,6 +217,7 @@
   <!-- Scripts -->
   <script src="js/uiUtils.js"></script>
   <script src="js/themeManager.js"></script>
+  <script src="js/dialogManager.js"></script>
   <script src="js/viewManager.js"></script>
   <script src="js/contextMenuManager.js"></script>
   <script src="js/keyboardManager.js"></script>

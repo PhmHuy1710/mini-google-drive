@@ -13,7 +13,7 @@
   <!-- Styles -->
   <link rel="stylesheet" href="css/main.css">
 </head>
-<body>
+<body class="recycle-bin-page">
   <!-- Header -->
   <div class="drive-header">
     <div class="header-left">
@@ -64,31 +64,73 @@
     </div>
 
     <!-- Trash File List Table -->
-    <table class="file-list" id="trashTable">
-      <thead>
-        <tr>
-          <th class="col-name">Tên</th>
-          <th class="col-time">Ngày xóa</th>
-          <th class="col-size">Dung lượng</th>
-          <th class="col-action">Tác vụ</th>
-        </tr>
-      </thead>
-      <tbody id="trashListBody"></tbody>
-    </table>
+    <div class="table-wrapper">
+      <table class="file-list" id="trashTable">
+        <thead>
+          <tr>
+            <th class="col-name">Tên</th>
+            <th class="col-time">Ngày xóa</th>
+            <th class="col-size">Dung lượng</th>
+            <th class="col-action">Tác vụ</th>
+          </tr>
+        </thead>
+        <tbody id="trashListBody"></tbody>
+      </table>
+    </div>
 
     <!-- Empty State -->
-    <div class="empty-note" id="emptyTrashNote" style="display: none;">
-      <div class="empty-icon">🗑️</div>
-      <h3>Thùng rác trống</h3>
-      <p>Không có tệp hay thư mục nào trong thùng rác</p>
-      <button class="btn btn-primary" onclick="window.location.href='index.html'">
-        <span class="mdi mdi-arrow-left"></span> Quay lại trang chính
-      </button>
+    <div class="empty-state" id="emptyTrashNote" style="display: none;">
+      <div class="empty-state-illustration">
+        <span class="mdi mdi-delete-empty"></span>
+      </div>
+      <div class="empty-state-content">
+        <h3 class="empty-state-title">Thùng rác trống</h3>
+        <p class="empty-state-message">Không có tệp hay thư mục nào trong thùng rác</p>
+        <div class="empty-state-actions">
+          <a href="/" class="btn btn-primary empty-state-btn">
+            <span class="mdi mdi-arrow-left"></span>
+            Quay về trang chính
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Toast Container -->
   <div id="toast-container"></div>
+
+  <!-- Context Menu -->
+  <div class="context-menu" id="contextMenu" style="display: none;">
+    <div class="context-menu-item" data-action="restore">
+      <span class="mdi mdi-restore"></span>
+      <span>Khôi phục</span>
+    </div>
+    <div class="context-menu-separator"></div>
+    <div class="context-menu-item context-menu-danger" data-action="delete-forever">
+      <span class="mdi mdi-delete-forever"></span>
+      <span>Xóa vĩnh viễn</span>
+    </div>
+  </div>
+
+  <!-- Mobile Action Menu -->
+  <div class="mobile-action-menu" id="mobileActionMenu" style="display: none;">
+    <div class="mobile-action-menu-header">
+      <div class="mobile-action-menu-title" id="mobileActionTitle">Tác vụ file</div>
+      <button class="mobile-action-menu-close" id="mobileActionClose">
+        <span class="mdi mdi-close"></span>
+      </button>
+    </div>
+    <div class="mobile-action-menu-actions" id="mobileActionButtons">
+      <button class="mobile-action-btn" data-action="restore">
+        <span class="mdi mdi-restore"></span>
+        <span>Khôi phục</span>
+      </button>
+      <button class="mobile-action-btn" data-action="delete-forever">
+        <span class="mdi mdi-delete-forever"></span>
+        <span>Xóa vĩnh viễn</span>
+      </button>
+    </div>
+  </div>
 
   <!-- Confirmation Modal -->
   <div class="modal-overlay" id="confirmModal" style="display: none;">
@@ -112,6 +154,10 @@
   <!-- Scripts -->
   <script src="js/uiUtils.js"></script>
   <script src="js/themeManager.js"></script>
+  <script src="js/dialogManager.js"></script>
+  <script src="js/contextMenuManager.js"></script>
+  <script src="js/skeletonManager.js"></script>
+  <script src="js/mobileActionManager.js"></script>
   <script src="js/recycleBinManager.js"></script>
   <script>
     // Initialize Recycle Bin when page loads
