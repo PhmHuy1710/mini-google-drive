@@ -189,7 +189,7 @@ class FileManager {
           file.modifiedTime ? new Date(file.modifiedTime).toLocaleString() : ""
         }</td>
         <td class="col-size">${file.size ? formatSize(file.size) : ""}</td>
-        <td>
+        <td class="col-action">
           <div class="action-group">
           ${
             !file.isFolder

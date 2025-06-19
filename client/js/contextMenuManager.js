@@ -5,6 +5,7 @@ class ContextMenuManager {
     this.currentTarget = null;
     this.currentFile = null;
     this.isVisible = false;
+    this.fallbackWarningShown = false;
 
     this.init();
   }
@@ -132,8 +133,10 @@ class ContextMenuManager {
   }
 
   handleMobileLongPress(e, fileElement) {
-    // Prevent default touch behavior
-    e.preventDefault();
+    // Only prevent default if event is cancelable
+    if (e.cancelable) {
+      e.preventDefault();
+    }
 
     // Add haptic feedback if available
     if (navigator.vibrate) {
@@ -143,8 +146,50 @@ class ContextMenuManager {
     const fileId = fileElement.getAttribute("data-file-id");
     const isFolder = fileElement.getAttribute("data-is-folder") === "true";
 
-    // Find file data
-    this.currentFile = fileManager.currentFiles?.find(f => f.id === fileId);
+    // Find file data - check if fileManager exists and has currentFiles
+    if (
+      typeof fileManager === "undefined" ||
+      !fileManager ||
+      !fileManager.currentFiles
+    ) {
+      // Try to get file data from DOM attributes as fallback
+      let fileName = "Unknown";
+
+      // Try multiple methods to get file name
+      const nameElement = fileElement.querySelector(".file-link, .folder-link");
+      const renameButton = fileElement.querySelector(
+        ".btn-rename[data-file-name]"
+      );
+
+      if (nameElement && nameElement.textContent?.trim()) {
+        fileName = nameElement.textContent.trim();
+      } else if (renameButton && renameButton.getAttribute("data-file-name")) {
+        fileName = renameButton.getAttribute("data-file-name");
+      } else {
+        // Try alternative selectors
+        const altNameElement = fileElement.querySelector(
+          "td:first-child span, .file-name, .folder-name"
+        );
+        if (altNameElement && altNameElement.textContent?.trim()) {
+          fileName = altNameElement.textContent.trim();
+        }
+      }
+
+      this.currentFile = {
+        id: fileId,
+        name: fileName,
+        isFolder: isFolder,
+        webViewLink: null, // Add default properties
+      };
+      // Only log once to avoid spam
+      if (!this.fallbackWarningShown) {
+        console.warn("FileManager not available, using fallback file data");
+        this.fallbackWarningShown = true;
+      }
+    } else {
+      this.currentFile = fileManager.currentFiles.find(f => f.id === fileId);
+    }
+
     this.currentTarget = fileElement;
 
     if (!this.currentFile) {
@@ -180,8 +225,50 @@ class ContextMenuManager {
     const fileId = fileElement.getAttribute("data-file-id");
     const isFolder = fileElement.getAttribute("data-is-folder") === "true";
 
-    // Find file data
-    this.currentFile = fileManager.currentFiles?.find(f => f.id === fileId);
+    // Find file data - check if fileManager exists and has currentFiles
+    if (
+      typeof fileManager === "undefined" ||
+      !fileManager ||
+      !fileManager.currentFiles
+    ) {
+      // Try to get file data from DOM attributes as fallback
+      let fileName = "Unknown";
+
+      // Try multiple methods to get file name
+      const nameElement = fileElement.querySelector(".file-link, .folder-link");
+      const renameButton = fileElement.querySelector(
+        ".btn-rename[data-file-name]"
+      );
+
+      if (nameElement && nameElement.textContent?.trim()) {
+        fileName = nameElement.textContent.trim();
+      } else if (renameButton && renameButton.getAttribute("data-file-name")) {
+        fileName = renameButton.getAttribute("data-file-name");
+      } else {
+        // Try alternative selectors
+        const altNameElement = fileElement.querySelector(
+          "td:first-child span, .file-name, .folder-name"
+        );
+        if (altNameElement && altNameElement.textContent?.trim()) {
+          fileName = altNameElement.textContent.trim();
+        }
+      }
+
+      this.currentFile = {
+        id: fileId,
+        name: fileName,
+        isFolder: isFolder,
+        webViewLink: null,
+      };
+      // Only log once to avoid spam
+      if (!this.fallbackWarningShown) {
+        console.warn("FileManager not available, using fallback file data");
+        this.fallbackWarningShown = true;
+      }
+    } else {
+      this.currentFile = fileManager.currentFiles.find(f => f.id === fileId);
+    }
+
     this.currentTarget = fileElement;
 
     if (!this.currentFile) {
@@ -279,8 +366,18 @@ class ContextMenuManager {
 
     switch (action) {
       case "preview":
-        if (!isFolder && previewManager) {
-          previewManager.previewFile(file, fileManager.currentFiles || []);
+        if (
+          !isFolder &&
+          typeof previewManager !== "undefined" &&
+          previewManager
+        ) {
+          const currentFiles =
+            typeof fileManager !== "undefined" &&
+            fileManager &&
+            fileManager.currentFiles
+              ? fileManager.currentFiles
+              : [];
+          previewManager.previewFile(file, currentFiles);
         }
         break;
 
@@ -289,8 +386,14 @@ class ContextMenuManager {
         break;
 
       case "rename":
-        if (fileManager) {
+        if (typeof fileManager !== "undefined" && fileManager) {
           fileManager.renameFile(file.id, file.name);
+        } else {
+          // Fallback: show simple prompt and make API call directly
+          const newName = prompt("Nhập tên mới:", file.name);
+          if (newName && newName !== file.name) {
+            this.renameFileDirect(file.id, newName);
+          }
         }
         break;
 
@@ -308,8 +411,40 @@ class ContextMenuManager {
         break;
 
       case "delete":
-        if (fileManager) {
+        if (typeof fileManager !== "undefined" && fileManager) {
           fileManager.deleteFile(file.id, isFolder);
+        } else {
+          // Fallback: show confirm and make API call directly
+          const itemType = isFolder ? "thư mục" : "file";
+          if (confirm(`Bạn chắc chắn muốn xóa ${itemType} "${file.name}"?`)) {
+            this.deleteFileDirect(file.id);
+          }
+        }
+        break;
+
+      case "delete-forever":
+        // Permanent delete for recycle bin
+        if (typeof recycleBinManager !== "undefined" && recycleBinManager) {
+          recycleBinManager.permanentlyDeleteFile(file.id);
+        } else {
+          // Fallback: direct API call
+          if (
+            confirm(
+              `Bạn chắc chắn muốn xóa vĩnh viễn "${file.name}"? Hành động này không thể hoàn tác!`
+            )
+          ) {
+            this.permanentDeleteDirect(file.id);
+          }
+        }
+        break;
+
+      case "restore":
+        // Restore from recycle bin
+        if (typeof recycleBinManager !== "undefined" && recycleBinManager) {
+          recycleBinManager.restoreFile(file.id);
+        } else {
+          // Fallback: direct API call
+          this.restoreFileDirect(file.id);
         }
         break;
 
@@ -339,6 +474,79 @@ class ContextMenuManager {
   // Method to get current file
   getCurrentFile() {
     return this.currentFile;
+  }
+
+  // Fallback methods when fileManager is not available
+  async renameFileDirect(fileId, newName) {
+    try {
+      const response = await fetch(`/api/rename/${fileId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName }),
+      });
+
+      if (response.ok) {
+        showToast("Đã đổi tên thành công!", "success");
+        // Reload page to refresh file list
+        window.location.reload();
+      } else {
+        showToast("Lỗi đổi tên!", "error");
+      }
+    } catch (error) {
+      showToast("Lỗi đổi tên!", "error");
+    }
+  }
+
+  async deleteFileDirect(fileId) {
+    try {
+      const response = await fetch(`/api/delete/${fileId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        showToast("Đã xóa thành công!", "success");
+        // Reload page to refresh file list
+        window.location.reload();
+      } else {
+        showToast("Lỗi xóa file!", "error");
+      }
+    } catch (error) {
+      showToast("Lỗi xóa file!", "error");
+    }
+  }
+
+  async permanentDeleteDirect(fileId) {
+    try {
+      const response = await fetch(`/api/permanent-delete/${fileId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        showToast("Đã xóa vĩnh viễn!", "success");
+        window.location.reload();
+      } else {
+        showToast("Lỗi xóa vĩnh viễn!", "error");
+      }
+    } catch (error) {
+      showToast("Lỗi xóa vĩnh viễn!", "error");
+    }
+  }
+
+  async restoreFileDirect(fileId) {
+    try {
+      const response = await fetch(`/api/restore/${fileId}`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        showToast("Đã khôi phục thành công!", "success");
+        window.location.reload();
+      } else {
+        showToast("Lỗi khôi phục file!", "error");
+      }
+    } catch (error) {
+      showToast("Lỗi khôi phục file!", "error");
+    }
   }
 }
 

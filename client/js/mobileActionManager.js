@@ -6,8 +6,17 @@ class MobileActionManager {
     this.currentFile = null;
     this.isMenuVisible = false;
     this.isBulkMode = false;
+    this.initialized = false;
+    this.retryCount = 0;
+    this.maxRetries = 10;
 
-    this.init();
+    // Wait for DOM to be ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => this.init());
+    } else {
+      // DOM is already ready
+      this.init();
+    }
   }
 
   init() {
@@ -15,12 +24,40 @@ class MobileActionManager {
     this.mobileBulkActions = document.getElementById("mobileBulkActions");
 
     if (!this.mobileActionMenu || !this.mobileBulkActions) {
-      console.warn("Mobile action elements not found");
-      return;
+      this.retryCount++;
+
+      if (this.retryCount <= this.maxRetries) {
+        // Only log every 3 retries to reduce spam
+        if (this.retryCount % 3 === 1) {
+          console.warn(
+            `Mobile action elements not found, retrying... (${this.retryCount}/${this.maxRetries})`
+          );
+        }
+        setTimeout(() => this.init(), 200); // Increased delay
+        return;
+      } else {
+        console.warn(
+          "Mobile action elements not found after maximum retries. Mobile features disabled."
+        );
+        this.initialized = false;
+        // Still allow basic functionality without mobile elements
+        this.setupBasicEventListeners();
+        return;
+      }
     }
 
     this.setupEventListeners();
+    this.initialized = true;
     console.log("📱 Mobile Action Manager initialized");
+  }
+
+  setupBasicEventListeners() {
+    // Basic functionality without mobile action menu elements
+    // Still detect mobile and add triggers if possible
+    if (this.isMobileDevice()) {
+      this.addMobileActionTriggers();
+    }
+    console.log("📱 Mobile Action Manager running in basic mode");
   }
 
   setupEventListeners() {
@@ -45,6 +82,17 @@ class MobileActionManager {
     this.mobileActionMenu.addEventListener("click", e => {
       const actionBtn = e.target.closest(".mobile-action-btn");
       if (actionBtn) {
+        const action = actionBtn.getAttribute("data-action");
+        this.executeMobileAction(action);
+        this.hideMobileActionMenu();
+      }
+    });
+
+    // Add touch support for mobile action buttons
+    this.mobileActionMenu.addEventListener("touchend", e => {
+      const actionBtn = e.target.closest(".mobile-action-btn");
+      if (actionBtn) {
+        e.preventDefault();
         const action = actionBtn.getAttribute("data-action");
         this.executeMobileAction(action);
         this.hideMobileActionMenu();
@@ -151,10 +199,21 @@ class MobileActionManager {
       trigger.innerHTML = '<span class="mdi mdi-dots-vertical"></span>';
       trigger.title = "Tác vụ";
 
-      trigger.addEventListener("click", e => {
+      // Add both click and touch events for better mobile support
+      const handleTriggerAction = e => {
+        // Only prevent default if event is cancelable
+        if (e.cancelable) {
+          e.preventDefault();
+        }
         e.stopPropagation();
         const fileId = row.getAttribute("data-file-id");
         const isFolder = row.getAttribute("data-is-folder") === "true";
+
+        // Add visual feedback
+        trigger.style.transform = "scale(0.95)";
+        setTimeout(() => {
+          trigger.style.transform = "";
+        }, 150);
 
         // Check if we're on the recycle bin page
         const isRecycleBin = window.location.pathname.includes("recycle-bin");
@@ -178,13 +237,22 @@ class MobileActionManager {
             this.showMobileActionMenu(file, isFolder);
           }
         }
-      });
+      };
+
+      // Add both click and touch events
+      trigger.addEventListener("click", handleTriggerAction);
+      trigger.addEventListener("touchend", handleTriggerAction);
 
       actionCell.parentNode.appendChild(trigger);
     }
   }
 
   showMobileActionMenu(file, isFolder) {
+    if (!this.initialized || !this.mobileActionMenu) {
+      console.warn("Mobile action manager not initialized");
+      return;
+    }
+
     this.currentFile = file;
 
     // Update menu title
@@ -325,12 +393,16 @@ class MobileActionManager {
 
   // Bulk actions
   enterBulkMode() {
+    if (!this.initialized) return;
+
     this.isBulkMode = true;
     document.body.classList.add("mobile-select-mode");
     this.showBulkActionsBar();
   }
 
   exitBulkMode() {
+    if (!this.initialized) return;
+
     this.isBulkMode = false;
     document.body.classList.remove("mobile-select-mode");
     this.hideBulkActionsBar();
@@ -342,6 +414,8 @@ class MobileActionManager {
   }
 
   showBulkActionsBar() {
+    if (!this.initialized || !this.mobileBulkActions) return;
+
     this.mobileBulkActions.style.display = "flex";
     setTimeout(() => {
       this.mobileBulkActions.classList.add("show");
@@ -349,6 +423,8 @@ class MobileActionManager {
   }
 
   hideBulkActionsBar() {
+    if (!this.initialized || !this.mobileBulkActions) return;
+
     this.mobileBulkActions.classList.remove("show");
     setTimeout(() => {
       this.mobileBulkActions.style.display = "none";

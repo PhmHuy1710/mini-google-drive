@@ -2111,23 +2111,31 @@ body {
 
   /* Mobile action trigger column */
   .mobile-action-trigger {
-    width: 10%;
-    min-width: 48px; /* Increased for better touch target */
-    display: table-cell !important;
-    text-align: center;
-    padding: 12px 8px; /* Increased padding for better touch */
     background: var(--bg-tertiary);
-    border: none;
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
-    color: var(--text-secondary);
-    font-size: 18px;
+    padding: 12px 8px;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 18px;
+    touch-action: manipulation;
   }
 
-  .mobile-action-trigger:hover {
+  .mobile-action-trigger:hover,
+  .mobile-action-trigger:focus {
     background: var(--bg-hover);
     color: var(--text-primary);
+    border-color: var(--border-accent);
+  }
+
+  .mobile-action-trigger:active {
+    transform: scale(0.95);
   }
 
   /* Mobile action buttons - ensure consistency */
@@ -3277,34 +3285,7 @@ body {
     white-space: nowrap;
   }
 
-  /* Mobile action trigger */
-  .mobile-action-trigger {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-primary);
-    border-radius: 6px;
-    padding: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-width: 36px;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
 
-  .mobile-action-trigger:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-accent);
-  }
-
-  .mobile-action-trigger:active {
-    transform: scale(0.95);
-  }
-
-  .mobile-action-trigger .mdi {
-    font-size: 18px;
-    color: var(--text-secondary);
-  }
 
   /* Mobile file selection */
   .mobile-select-mode .file-list tbody tr {
