@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thùng rác - Mini Google Drive</title>
+  <meta name="description" content="Recycle Bin - Manage deleted files and folders">
+  
+  <!-- Icons & Fonts -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+  <link rel="icon" href="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <!-- Header -->
+  <div class="drive-header">
+    <div class="header-left">
+      <img src="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png"
+           alt="Drive"
+           style="width:32px;height:32px;margin-right:13px;">
+      <span class="header-title">
+        <a href="index.html" style="color: inherit; text-decoration: none;">Mini Google Drive</a>
+        <span style="color: #666; margin: 0 8px;">/</span>
+        <span style="color: #d93025;">🗑️ Thùng rác</span>
+      </span>
+    </div>
+
+    <div class="header-right">
+      <button class="theme-toggle" id="themeToggle" title="Chuyển đổi chế độ sáng/tối">
+        <span class="mdi mdi-weather-night" id="themeIcon"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <button class="btn btn-back" id="backToMainBtn" title="Quay lại trang chính">
+        <span class="mdi mdi-arrow-left"></span> Quay lại
+      </button>
+      
+      <button class="btn btn-danger" id="emptyTrashBtn" title="Xóa vĩnh viễn tất cả">
+        <span class="mdi mdi-delete-forever"></span> Xóa tất cả
+      </button>
+      
+      <button class="btn btn-refresh" id="refreshTrashBtn" title="Làm mới">
+        <span class="mdi mdi-refresh"></span> Làm mới
+      </button>
+
+      <!-- Progress bar for operations -->
+      <div class="progress-wrap" id="progressWrap" style="display: none;">
+        <div class="progress-bar" id="progressBar"></div>
+        <span class="progress-text" id="progressText"></span>
+      </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="recycle-info-banner">
+      <span class="mdi mdi-information-outline"></span>
+      <span>Các tệp và thư mục đã xóa sẽ được lưu tại đây. Bạn có thể khôi phục hoặc xóa vĩnh viễn.</span>
+    </div>
+
+    <!-- Trash File List Table -->
+    <table class="file-list" id="trashTable">
+      <thead>
+        <tr>
+          <th class="col-name">Tên</th>
+          <th class="col-time">Ngày xóa</th>
+          <th class="col-size">Dung lượng</th>
+          <th class="col-action">Tác vụ</th>
+        </tr>
+      </thead>
+      <tbody id="trashListBody"></tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div class="empty-note" id="emptyTrashNote" style="display: none;">
+      <div class="empty-icon">🗑️</div>
+      <h3>Thùng rác trống</h3>
+      <p>Không có tệp hay thư mục nào trong thùng rác</p>
+      <button class="btn btn-primary" onclick="window.location.href='index.html'">
+        <span class="mdi mdi-arrow-left"></span> Quay lại trang chính
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Confirmation Modal -->
+  <div class="modal-overlay" id="confirmModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Xác nhận</h3>
+        <button class="modal-close" id="modalClose">
+          <span class="mdi mdi-close"></span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="modalMessage">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modalCancel">Hủy</button>
+        <button class="btn btn-danger" id="modalConfirm">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/uiUtils.js"></script>
+  <script src="js/themeManager.js"></script>
+  <script src="js/recycleBinManager.js"></script>
+  <script>
+    // Initialize Recycle Bin when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof recycleBinManager !== 'undefined') {
+        recycleBinManager.init();
+      } else {
+        console.error('recycleBinManager not loaded');
+      }
+    });
+  </script>
+</body>
+</html>
