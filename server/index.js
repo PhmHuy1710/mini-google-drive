@@ -24,7 +24,11 @@ app.use(
         scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
         imgSrc: ["'self'", "data:", "https:"],
         fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-        connectSrc: ["'self'"],
+        connectSrc: [
+          "'self'",
+          "https://mini-google-drive.vercel.app",
+          "https://*.vercel.app",
+        ],
       },
     },
   })
@@ -32,7 +36,10 @@ app.use(
 
 app.use(
   cors({
-    origin: process.env.NODE_ENV === "production" ? false : true,
+    origin:
+      process.env.NODE_ENV === "production"
+        ? ["https://mini-google-drive.vercel.app", "https://*.vercel.app"]
+        : true,
     credentials: true,
   })
 );
@@ -116,32 +123,43 @@ app.use((req, res) => {
   });
 });
 
-// Start server
-const PORT = config.server.port;
-const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Mini Google Drive server running at http://0.0.0.0:${PORT}`);
+// Start server (only if not running on Vercel)
+if (!config.server.isVercel) {
+  const PORT = config.server.port;
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(
+      `🚀 Mini Google Drive server running at http://0.0.0.0:${PORT}`
+    );
+    console.log(`📁 Environment: ${config.server.nodeEnv}`);
+    console.log(`🔒 Security features enabled`);
+  });
+
+  // Set server timeout for large file uploads (15 minutes)
+  server.timeout = 15 * 60 * 1000;
+  server.keepAliveTimeout = 10 * 60 * 1000;
+  server.headersTimeout = 10 * 60 * 1000;
+
+  // Graceful shutdown
+  process.on("SIGTERM", () => {
+    console.log("SIGTERM received. Shutting down gracefully...");
+    server.close(() => {
+      console.log("Server closed.");
+      process.exit(0);
+    });
+  });
+
+  process.on("SIGINT", () => {
+    console.log("SIGINT received. Shutting down gracefully...");
+    server.close(() => {
+      console.log("Server closed.");
+      process.exit(0);
+    });
+  });
+} else {
+  console.log(`🚀 Mini Google Drive running on Vercel`);
   console.log(`📁 Environment: ${config.server.nodeEnv}`);
   console.log(`🔒 Security features enabled`);
-});
+}
 
-// Set server timeout for large file uploads (15 minutes)
-server.timeout = 15 * 60 * 1000;
-server.keepAliveTimeout = 10 * 60 * 1000;
-server.headersTimeout = 10 * 60 * 1000;
-
-// Graceful shutdown
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received. Shutting down gracefully...");
-  server.close(() => {
-    console.log("Server closed.");
-    process.exit(0);
-  });
-});
-
-process.on("SIGINT", () => {
-  console.log("SIGINT received. Shutting down gracefully...");
-  server.close(() => {
-    console.log("Server closed.");
-    process.exit(0);
-  });
-});
+// Export app for Vercel
+module.exports = app;

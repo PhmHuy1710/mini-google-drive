@@ -14,6 +14,7 @@ const config = {
     nodeEnv: process.env.NODE_ENV || "development",
     sessionSecret:
       process.env.SESSION_SECRET || "vaicalz-production-server-tezt",
+    isVercel: process.env.VERCEL === "1",
   },
   upload: {
     maxFileSize: 5 * 1024 * 1024 * 1024, // 5GB
