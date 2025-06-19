@@ -2,7 +2,11 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#4a9eff">
   <title>Mini Google Drive - File Manager</title>
   <meta name="description" content="Modern file management system using Google Drive API">
   
@@ -52,6 +56,12 @@
         <span class="mdi mdi-delete"></span> Thùng rác
       </button>
 
+      <div class="view-toggle-container">
+        <button class="btn btn-view-toggle" id="viewToggleBtn" title="Chuyển đổi chế độ xem">
+          <span class="mdi mdi-view-list" id="viewToggleIcon"></span>
+        </button>
+      </div>
+
       <!-- Search will be added here by searchManager -->
       
       <div class="progress-wrap" id="progressWrap">
@@ -84,6 +94,11 @@
       <tbody id="fileListBody"></tbody>
     </table>
 
+    <!-- File Grid View -->
+    <div class="file-grid" id="fileGrid" style="display: none;">
+      <!-- Grid items will be populated by JavaScript -->
+    </div>
+
     <!-- Empty State -->
     <div class="empty-note" id="emptyNote" style="display: none;">
       Chưa có tệp hay thư mục nào
@@ -93,9 +108,95 @@
   <!-- Toast Container -->
   <div id="toast-container"></div>
 
+  <!-- Context Menu -->
+  <div class="context-menu" id="contextMenu" style="display: none;">
+    <div class="context-menu-item" data-action="preview">
+      <span class="mdi mdi-eye"></span>
+      <span>Xem trước</span>
+      <span class="context-shortcut">Space</span>
+    </div>
+    <div class="context-menu-item" data-action="download">
+      <span class="mdi mdi-download"></span>
+      <span>Tải xuống</span>
+      <span class="context-shortcut">Ctrl+D</span>
+    </div>
+    <div class="context-menu-separator"></div>
+    <div class="context-menu-item" data-action="rename">
+      <span class="mdi mdi-pencil"></span>
+      <span>Đổi tên</span>
+      <span class="context-shortcut">F2</span>
+    </div>
+    <div class="context-menu-item" data-action="copy-link">
+      <span class="mdi mdi-link"></span>
+      <span>Sao chép liên kết</span>
+      <span class="context-shortcut">Ctrl+L</span>
+    </div>
+    <div class="context-menu-separator"></div>
+    <div class="context-menu-item context-menu-danger" data-action="delete">
+      <span class="mdi mdi-delete"></span>
+      <span>Xóa</span>
+      <span class="context-shortcut">Delete</span>
+    </div>
+  </div>
+
+  <!-- Mobile Action Menu -->
+  <div class="mobile-action-menu" id="mobileActionMenu" style="display: none;">
+    <div class="mobile-action-menu-header">
+      <div class="mobile-action-menu-title" id="mobileActionTitle">Tác vụ file</div>
+      <button class="mobile-action-menu-close" id="mobileActionClose">
+        <span class="mdi mdi-close"></span>
+      </button>
+    </div>
+    <div class="mobile-action-menu-actions" id="mobileActionButtons">
+      <button class="mobile-action-btn" data-action="preview">
+        <span class="mdi mdi-eye"></span>
+        <span>Xem trước</span>
+      </button>
+      <button class="mobile-action-btn" data-action="download">
+        <span class="mdi mdi-download"></span>
+        <span>Tải xuống</span>
+      </button>
+      <button class="mobile-action-btn" data-action="rename">
+        <span class="mdi mdi-pencil"></span>
+        <span>Đổi tên</span>
+      </button>
+      <button class="mobile-action-btn" data-action="copy-link">
+        <span class="mdi mdi-link"></span>
+        <span>Sao chép link</span>
+      </button>
+      <button class="mobile-action-btn" data-action="delete">
+        <span class="mdi mdi-delete"></span>
+        <span>Xóa</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Bulk Actions Bar -->
+  <div class="mobile-bulk-actions" id="mobileBulkActions" style="display: none;">
+    <div class="mobile-bulk-actions-info" id="mobileBulkInfo">
+      0 mục đã chọn
+    </div>
+    <div class="mobile-bulk-actions-buttons">
+      <button class="mobile-bulk-btn" id="mobileBulkDownload">
+        <span class="mdi mdi-download"></span> Tải
+      </button>
+      <button class="mobile-bulk-btn" id="mobileBulkDelete">
+        <span class="mdi mdi-delete"></span> Xóa
+      </button>
+      <button class="mobile-bulk-btn" id="mobileBulkCancel">
+        <span class="mdi mdi-close"></span> Hủy
+      </button>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="js/uiUtils.js"></script>
   <script src="js/themeManager.js"></script>
+  <script src="js/viewManager.js"></script>
+  <script src="js/contextMenuManager.js"></script>
+  <script src="js/keyboardManager.js"></script>
+  <script src="js/skeletonManager.js"></script>
+  <script src="js/mobileActionManager.js"></script>
   <script src="js/fileManager.js"></script>
   <script src="js/uploadManager.js"></script>
   <script src="js/searchManager.js"></script>

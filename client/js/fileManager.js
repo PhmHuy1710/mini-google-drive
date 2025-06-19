@@ -96,7 +96,8 @@ class FileManager {
 
   async renderFiles(folderId) {
     try {
-      const files = await this.fetchFiles(folderId);
+      // Show skeleton loading
+      const container = document.querySelector(".container");
       const tbody = document.getElementById("fileListBody");
       const emptyNote = document.getElementById("emptyNote");
 
@@ -105,21 +106,53 @@ class FileManager {
         return;
       }
 
+      // Hide empty note and clear existing content
+      emptyNote.style.display = "none";
       tbody.innerHTML = "";
 
-      if (!files || !files.length) {
+      // Show skeleton based on current view
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        skeletonManager.showFileListSkeletonForCurrentView(container, 8);
+      }
+
+      const files = await this.fetchFiles(folderId);
+      this.currentFiles = files; // Store for viewManager
+
+      // Hide skeleton
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        skeletonManager.hideAllSkeletons();
+      }
+
+      // Sort files using sortManager
+      const sortedFiles = sortManager ? sortManager.sortFiles(files) : files;
+
+      if (!sortedFiles || !sortedFiles.length) {
         emptyNote.style.display = "block";
+        tbody.innerHTML = "";
+
+        // Clear grid view too (safe check)
+        if (typeof viewManager !== "undefined" && viewManager) {
+          viewManager.renderFiles([]);
+        }
         return;
       }
 
       emptyNote.style.display = "none";
 
-      // Sort files using sortManager
-      const sortedFiles = sortManager ? sortManager.sortFiles(files) : files;
-
-      tbody.innerHTML = sortedFiles
-        .map(file => this.renderFileRow(file))
-        .join("");
+      // Check if viewManager should handle rendering (safe check)
+      if (
+        typeof viewManager !== "undefined" &&
+        viewManager &&
+        viewManager.renderFiles(sortedFiles)
+      ) {
+        // ViewManager handled the rendering (grid view)
+        tbody.innerHTML = ""; // Clear table
+      } else {
+        // Render list view (table)
+        tbody.innerHTML = sortedFiles
+          .map(file => this.renderFileRow(file))
+          .join("");
+      }
 
       // Notify multi-select manager about file list update
       if (multiSelectManager) {

@@ -9,6 +9,9 @@ class App {
     try {
       console.log("🚀 Initializing Mini Google Drive...");
 
+      // Mobile optimizations
+      this.setupMobileOptimizations();
+
       // Initialize breadcrumbs
       fileManager.breadcrumbs = [{ id: null, name: "Tệp của bạn" }];
 
@@ -29,6 +32,79 @@ class App {
     } catch (error) {
       console.error("❌ Failed to initialize app:", error);
       showToast("Lỗi khởi tạo ứng dụng", "error");
+    }
+  }
+
+  setupMobileOptimizations() {
+    // Detect mobile device
+    const isMobile =
+      window.innerWidth <= 768 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+
+    if (isMobile) {
+      document.body.classList.add("mobile-device");
+
+      // Prevent zoom on double tap
+      let lastTouchEnd = 0;
+      document.addEventListener(
+        "touchend",
+        event => {
+          const now = new Date().getTime();
+          if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+          }
+          lastTouchEnd = now;
+        },
+        false
+      );
+
+      // Optimize scroll performance
+      document.addEventListener("touchstart", () => {}, { passive: true });
+      document.addEventListener("touchmove", () => {}, { passive: true });
+
+      // Add mobile-specific classes
+      const mainContent = document.querySelector(".main-content");
+      if (mainContent) {
+        mainContent.classList.add("mobile-optimized");
+      }
+
+      // Optimize viewport for mobile
+      this.optimizeViewportForMobile();
+
+      console.log("📱 Mobile optimizations applied");
+    }
+  }
+
+  optimizeViewportForMobile() {
+    // Handle orientation change
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        // Force viewport recalculation
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+          viewport.setAttribute(
+            "content",
+            "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+          );
+        }
+
+        // Trigger resize event
+        window.dispatchEvent(new Event("resize"));
+      }, 100);
+    });
+
+    // Handle safe area insets for iOS
+    if (CSS.supports("padding-top: env(safe-area-inset-top)")) {
+      document.documentElement.style.setProperty(
+        "--safe-area-top",
+        "env(safe-area-inset-top)"
+      );
+      document.documentElement.style.setProperty(
+        "--safe-area-bottom",
+        "env(safe-area-inset-bottom)"
+      );
     }
   }
 
@@ -61,8 +137,27 @@ class App {
 
   async loadInitialData() {
     try {
+      // Show initial skeletons
+      const breadcrumbContainer = document.getElementById("breadcrumbs");
+      const storageContainer = document.getElementById("storageBar");
+
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        if (breadcrumbContainer) {
+          skeletonManager.showBreadcrumbSkeleton(breadcrumbContainer);
+        }
+        if (storageContainer) {
+          skeletonManager.showStorageSkeleton(storageContainer);
+        }
+      }
+
       // Load files in root directory
       await fileManager.openFolder(null, false);
+
+      // Hide navigation skeletons and render real content
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        skeletonManager.hideSkeleton("breadcrumb");
+        skeletonManager.hideSkeleton("storage");
+      }
 
       // Render breadcrumbs
       fileManager.renderBreadcrumbs();
@@ -73,6 +168,10 @@ class App {
       // Load sort preference
       sortManager.loadSortPreference();
     } catch (error) {
+      // Hide skeletons on error
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        skeletonManager.hideAllSkeletons();
+      }
       console.error("Error loading initial data:", error);
       throw error;
     }
@@ -126,6 +225,34 @@ class App {
         window.location.href = "recycle-bin.html";
       });
     }
+
+    // Event delegation for grid view actions
+    document.addEventListener("click", e => {
+      // Handle grid action buttons
+      if (e.target.closest(".file-grid-action")) {
+        const button = e.target.closest(".file-grid-action");
+        const fileId = button.getAttribute("data-file-id");
+        const fileName = button.getAttribute("data-file-name");
+        const isFolder = button.getAttribute("data-is-folder") === "true";
+
+        if (button.classList.contains("btn-preview")) {
+          // Preview file
+          const file = fileManager.currentFiles?.find(f => f.id === fileId);
+          if (file) {
+            previewManager.previewFile(file, fileManager.currentFiles || []);
+          }
+        } else if (button.classList.contains("btn-download")) {
+          // Download file
+          window.open(`/api/download/${fileId}`, "_blank");
+        } else if (button.classList.contains("btn-rename")) {
+          // Rename file
+          fileManager.renameFile(fileId, fileName);
+        } else if (button.classList.contains("btn-delete")) {
+          // Delete file
+          fileManager.deleteFile(fileId, isFolder);
+        }
+      }
+    });
   }
 
   handleKeyboard(e) {
@@ -201,10 +328,10 @@ class App {
       showToast("Đang làm mới...", "info");
 
       if (searchManager.isSearchMode) {
-        // Refresh search results
+        // Refresh search results (skeleton handled in searchManager)
         await searchManager.performSearch(searchManager.searchTerm);
       } else {
-        // Refresh current folder
+        // Refresh current folder (skeleton handled in fileManager)
         await fileManager.renderFiles(fileManager.currentFolderId);
       }
 

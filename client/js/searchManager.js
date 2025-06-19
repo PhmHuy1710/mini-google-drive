@@ -70,13 +70,28 @@ class SearchManager {
     this.searchTerm = term;
 
     try {
+      // Show skeleton loading
+      const container = document.querySelector(".container");
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        skeletonManager.showSearchSkeleton(container, 6);
+      }
+
       showToast("Đang tìm kiếm...", "info");
       const response = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
       const results = await response.json();
 
+      // Hide skeleton
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        skeletonManager.hideAllSkeletons();
+      }
+
       this.renderSearchResults(results, term);
       showToast(`Tìm thấy ${results.length} kết quả`, "success");
     } catch (error) {
+      // Hide skeleton on error
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        skeletonManager.hideAllSkeletons();
+      }
       showToast("Lỗi tìm kiếm", "error");
       console.error("Search error:", error);
     }
@@ -288,4 +303,3 @@ class SearchManager {
 
 // Export instance
 const searchManager = new SearchManager();
- 

@@ -31,7 +31,7 @@ mini-google-drive/
 
 ### 1. Clone repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/PhmHuy1710/mini-google-drive.git
 cd mini-google-drive
 ```
 
@@ -190,6 +190,5 @@ Mọi contribution đều được chào đón! Vui lòng:
 
 ---
 
-**Phát triển bởi**: AI Assistant  
+**Phát triển bởi**: phmhuy1710
 **Phiên bản**: 2.0.0  
-**Cập nhật lần cuối**: $(Get-Date -Format 'yyyy-MM-dd')
