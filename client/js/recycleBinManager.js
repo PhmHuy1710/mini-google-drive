@@ -55,6 +55,15 @@ class RecycleBinManager {
           this.permanentlyDeleteFile(fileId, fileName, isFolder);
         }
       }
+
+      // Handle locate button clicks
+      if (e.target.classList.contains("btn-locate")) {
+        const fileId = e.target.getAttribute("data-file-id");
+        const fileName = e.target.getAttribute("data-file-name");
+        if (fileId && fileName) {
+          this.showOriginalLocation(fileId, fileName);
+        }
+      }
     });
 
     // Modal event listeners
@@ -150,10 +159,15 @@ class RecycleBinManager {
         </td>
         <td class="col-time">${trashedDate}</td>
         <td class="col-size">${file.size ? formatSize(file.size) : ""}</td>
-        <td>
+        <td class="col-action">
           <div class="action-group">
             <button class="btn-action btn-restore mdi mdi-restore"
                     title="Khôi phục"
+                    data-file-id="${file.id}"
+                    data-file-name="${file.name}">
+            </button>
+            <button class="btn-action btn-locate mdi mdi-map-marker"
+                    title="Vị trí gốc"
                     data-file-id="${file.id}"
                     data-file-name="${file.name}">
             </button>
@@ -341,6 +355,15 @@ class RecycleBinManager {
     const modal = document.getElementById("confirmModal");
     if (modal) {
       modal.style.display = "none";
+    }
+  }
+
+  showOriginalLocation(fileId, fileName) {
+    const file = this.trashedFiles.find(f => f.id === fileId);
+    if (file && file.originalPath) {
+      showToast(`Vị trí gốc của "${fileName}": ${file.originalPath}`, "info");
+    } else {
+      showToast(`Không tìm thấy vị trí gốc của "${fileName}"`, "warning");
     }
   }
 }

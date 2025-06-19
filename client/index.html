@@ -38,32 +38,39 @@
   <div class="main-content">
     <!-- Toolbar -->
     <div class="toolbar">
-      <label class="upload-label upload-file" title="Tải lên tệp">
-        <span class="mdi mdi-upload"></span> Tải lên tệp
-        <input type="file" id="fileInput" multiple>
-      </label>
-      
-      <label class="upload-label upload-folder" title="Tải lên thư mục">
-        <span class="mdi mdi-folder-upload"></span> Tải lên thư mục
-        <input type="file" id="folderInput" webkitdirectory directory multiple>
-      </label>
-      
-      <button class="btn btn-create" id="createFolderBtn">
-        <span class="mdi mdi-folder-plus-outline"></span> Tạo thư mục
-      </button>
+      <!-- Upload Actions Group -->
+      <div class="toolbar-group upload-actions">
+        <label class="upload-label upload-file" title="Tải lên tệp">
+          <span class="mdi mdi-upload"></span> Tải lên tệp
+          <input type="file" id="fileInput" multiple>
+        </label>
 
-      <button class="btn btn-recycle" id="recycleBinBtn" title="Thùng rác">
-        <span class="mdi mdi-delete"></span> Thùng rác
-      </button>
+        <label class="upload-label upload-folder" title="Tải lên thư mục">
+          <span class="mdi mdi-folder-upload"></span> Tải lên thư mục
+          <input type="file" id="folderInput" webkitdirectory directory multiple>
+        </label>
+      </div>
 
-      <div class="view-toggle-container">
+      <!-- File Actions Group -->
+      <div class="toolbar-group file-actions">
+        <button class="btn btn-create" id="createFolderBtn">
+          <span class="mdi mdi-folder-plus-outline"></span> Tạo thư mục
+        </button>
+
+        <button class="btn btn-recycle" id="recycleBinBtn" title="Thùng rác">
+          <span class="mdi mdi-delete"></span> Thùng rác
+        </button>
+      </div>
+
+      <!-- Search will be added here by searchManager -->
+
+      <!-- View Actions Group -->
+      <div class="toolbar-group view-actions">
         <button class="btn btn-view-toggle" id="viewToggleBtn" title="Chuyển đổi chế độ xem">
           <span class="mdi mdi-view-list" id="viewToggleIcon"></span>
         </button>
       </div>
 
-      <!-- Search will be added here by searchManager -->
-      
       <div class="progress-wrap" id="progressWrap">
         <div class="progress-bar" id="progressBar"></div>
         <span class="progress-text" id="progressText"></span>
