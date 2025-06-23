@@ -358,7 +358,12 @@ class MobileActionManager {
         break;
 
       case "download":
-        window.open(`/api/download/${file.id}`, "_blank");
+        if (typeof fileManager !== "undefined" && fileManager) {
+          fileManager.downloadFile(file.id, file.name);
+        } else {
+          // Fallback
+          window.open(`/api/download/${file.id}`, "_blank");
+        }
         break;
 
       case "rename":
@@ -440,11 +445,48 @@ class MobileActionManager {
 
   handleBulkDownload() {
     if (typeof multiSelectManager !== "undefined" && multiSelectManager) {
-      const selectedFiles = Array.from(multiSelectManager.selectedFiles);
-      selectedFiles.forEach(fileId => {
-        window.open(`/api/download/${fileId}`, "_blank");
-      });
-      showToast(`Đang tải ${selectedFiles.length} file`, "info");
+      const selectedData = multiSelectManager.getSelectedFilesData();
+      const downloadableFiles = selectedData.filter(file => !file.isFolder);
+
+      if (downloadableFiles.length === 0) {
+        showToast("Không có file nào để tải về!", "error");
+        return;
+      }
+
+      if (downloadableFiles.length === 1) {
+        // Single file download with full notification
+        if (typeof fileManager !== "undefined" && fileManager) {
+          fileManager.downloadFile(
+            downloadableFiles[0].id,
+            downloadableFiles[0].name
+          );
+        } else {
+          // Fallback
+          window.open(`/api/download/${downloadableFiles[0].id}`, "_blank");
+          showToast("Đang tải file...", "info");
+        }
+      } else {
+        // Multiple files
+        showToast(`Đang tải ${downloadableFiles.length} file`, "info");
+
+        downloadableFiles.forEach((file, index) => {
+          setTimeout(() => {
+            if (typeof fileManager !== "undefined" && fileManager) {
+              // Use direct link creation for bulk (avoid multiple toasts)
+              const link = document.createElement("a");
+              link.href = `/api/download/${file.id}`;
+              link.download = file.name;
+              link.style.display = "none";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            } else {
+              // Fallback
+              window.open(`/api/download/${file.id}`, "_blank");
+            }
+          }, index * 500); // Stagger downloads
+        });
+      }
     }
   }
 

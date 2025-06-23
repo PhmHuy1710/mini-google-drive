@@ -243,7 +243,12 @@ class App {
           }
         } else if (button.classList.contains("btn-download")) {
           // Download file
-          window.open(`/api/download/${fileId}`, "_blank");
+          if (typeof fileManager !== "undefined" && fileManager) {
+            fileManager.downloadFile(fileId, fileName);
+          } else {
+            // Fallback
+            window.open(`/api/download/${fileId}`, "_blank");
+          }
         } else if (button.classList.contains("btn-rename")) {
           // Rename file
           fileManager.renameFile(fileId, fileName);

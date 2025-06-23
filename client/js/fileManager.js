@@ -70,6 +70,24 @@ class FileManager {
           }
         }
       }
+
+      // Handle folder ZIP download button clicks
+      if (e.target.classList.contains("btn-download-zip")) {
+        const folderId = e.target.getAttribute("data-file-id");
+        const folderName = e.target.getAttribute("data-file-name");
+        if (folderId) {
+          this.downloadFolderAsZip(folderId, folderName);
+        }
+      }
+
+      // Handle file download button clicks
+      if (e.target.classList.contains("btn-download")) {
+        const fileId = e.target.getAttribute("data-file-id");
+        const fileName = e.target.getAttribute("data-file-name");
+        if (fileId) {
+          this.downloadFile(fileId, fileName);
+        }
+      }
     });
   }
 
@@ -96,8 +114,9 @@ class FileManager {
 
   async renderFiles(folderId) {
     try {
-      // Show skeleton loading
-      const container = document.querySelector(".container");
+      // Get containers for skeleton loading
+      const tableWrapper = document.querySelector(".table-wrapper");
+      const fileGrid = document.getElementById("fileGrid");
       const tbody = document.getElementById("fileListBody");
       const emptyNote = document.getElementById("emptyNote");
 
@@ -110,15 +129,29 @@ class FileManager {
       emptyNote.style.display = "none";
       tbody.innerHTML = "";
 
-      // Show skeleton based on current view
+      // Show skeleton loading based on current view
       if (typeof skeletonManager !== "undefined" && skeletonManager) {
-        skeletonManager.showFileListSkeletonForCurrentView(container, 8);
+        // Check if we're in grid view
+        const isGridView =
+          typeof viewManager !== "undefined" &&
+          viewManager &&
+          viewManager.isGridView &&
+          viewManager.isGridView();
+
+        if (isGridView && fileGrid) {
+          // Clear grid and show grid skeleton
+          fileGrid.innerHTML = "";
+          skeletonManager.showFileGridSkeleton(fileGrid, 12);
+        } else if (tableWrapper) {
+          // Show table skeleton in table wrapper
+          skeletonManager.showFileListSkeleton(tableWrapper, 8);
+        }
       }
 
       const files = await this.fetchFiles(folderId);
       this.currentFiles = files; // Store for viewManager
 
-      // Hide skeleton
+      // Hide skeleton loading
       if (typeof skeletonManager !== "undefined" && skeletonManager) {
         skeletonManager.hideAllSkeletons();
       }
@@ -192,12 +225,14 @@ class FileManager {
         <td class="col-action">
           <div class="action-group">
           ${
-            !file.isFolder
+            file.isFolder
               ? `
-            <button class="btn-action btn-preview mdi mdi-eye" title="Xem trước" data-file-id="${file.id}"></button>
-            <a class="btn-action btn-download mdi mdi-download" title="Tải về" href="/api/download/${file.id}" download></a>
+            <button class="btn-action btn-download-zip mdi mdi-folder-zip" title="Tải về dưới dạng ZIP" data-file-id="${file.id}" data-file-name="${file.name}"></button>
           `
-              : ""
+              : `
+            <button class="btn-action btn-preview mdi mdi-eye" title="Xem trước" data-file-id="${file.id}"></button>
+            <button class="btn-action btn-download mdi mdi-download" title="Tải về" data-file-id="${file.id}" data-file-name="${file.name}"></button>
+          `
           }
             <button class="btn-action btn-delete mdi mdi-delete" title="Xóa" data-file-id="${
               file.id
@@ -349,27 +384,34 @@ class FileManager {
 
   async deleteFile(id, isFolder = false) {
     const itemType = isFolder ? "thư mục" : "file";
-    showConfirm(
-      `Bạn chắc chắn muốn chuyển ${itemType} này vào thùng rác?`,
-      async () => {
-        try {
-          const res = await fetch("/api/delete/" + id, { method: "DELETE" });
-          if (res.ok) {
-            await this.renderFiles(this.currentFolderId);
-            fetchStorage();
-            showToast(
-              `Đã chuyển ${itemType} vào thùng rác! Bạn có thể khôi phục từ thùng rác.`,
-              "success"
-            );
-          } else {
-            showToast("Xóa thất bại!", "error");
-          }
-        } catch {
-          showToast("Lỗi xóa file/thư mục!", "error");
+
+    const confirmed = await dialogManager.showConfirm({
+      title: "Xác nhận xóa",
+      message: `Bạn chắc chắn muốn chuyển ${itemType} này vào thùng rác?`,
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      type: "warning",
+    });
+
+    if (confirmed) {
+      try {
+        const res = await fetch("/api/delete/" + id, { method: "DELETE" });
+        if (res.ok) {
+          await this.renderFiles(this.currentFolderId);
+          fetchStorage();
+          showToast(
+            `Đã chuyển ${itemType} vào thùng rác! Bạn có thể khôi phục từ thùng rác.`,
+            "success"
+          );
+        } else {
+          showToast("Xóa thất bại!", "error");
         }
-      },
-      () => showToast("Đã hủy thao tác xóa.", "info")
-    );
+      } catch {
+        showToast("Lỗi xóa file/thư mục!", "error");
+      }
+    } else {
+      showToast("Đã hủy thao tác xóa.", "info");
+    }
   }
 
   async renameFile(fileId, oldName) {
@@ -436,6 +478,59 @@ class FileManager {
     } catch (error) {
       console.error("Preview error:", error);
       showToast("Lỗi mở xem trước!", "error");
+    }
+  }
+
+  async downloadFile(fileId, fileName) {
+    try {
+      showToast(`Đang tải về "${fileName}"...`, "info");
+
+      // Create download link and trigger download
+      const downloadUrl = `/api/download/${fileId}`;
+
+      // Create a temporary link and click it
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = fileName; // Suggest filename
+      link.style.display = "none";
+      document.body.appendChild(link);
+
+      // Trigger download
+      link.click();
+
+      // Clean up
+      document.body.removeChild(link);
+
+      showToast(`Đã bắt đầu tải về "${fileName}"`, "success");
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      showToast("Lỗi tải về file!", "error");
+    }
+  }
+
+  async downloadFolderAsZip(folderId, folderName) {
+    try {
+      showToast(`Đang chuẩn bị tải về thư mục "${folderName}"...`, "info");
+
+      // Create download link and trigger download
+      const downloadUrl = `/api/download-folder/${folderId}`;
+
+      // Create a temporary link and click it
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.style.display = "none";
+      document.body.appendChild(link);
+
+      // Trigger download
+      link.click();
+
+      // Clean up
+      document.body.removeChild(link);
+
+      showToast(`Đã bắt đầu tải về "${folderName}.zip"`, "success");
+    } catch (error) {
+      console.error("Error downloading folder as ZIP:", error);
+      showToast("Lỗi tải về thư mục!", "error");
     }
   }
 }

@@ -61,33 +61,6 @@ class RecycleBinManager {
         }
       }
     });
-
-    // Modal event listeners
-    this.setupModalListeners();
-  }
-
-  setupModalListeners() {
-    const modal = document.getElementById("confirmModal");
-    const modalClose = document.getElementById("modalClose");
-    const modalCancel = document.getElementById("modalCancel");
-    const modalConfirm = document.getElementById("modalConfirm");
-
-    if (modalClose) {
-      modalClose.addEventListener("click", () => this.hideModal());
-    }
-
-    if (modalCancel) {
-      modalCancel.addEventListener("click", () => this.hideModal());
-    }
-
-    // Click outside modal to close
-    if (modal) {
-      modal.addEventListener("click", e => {
-        if (e.target === modal) {
-          this.hideModal();
-        }
-      });
-    }
   }
 
   async loadTrashedFiles() {
@@ -99,14 +72,8 @@ class RecycleBinManager {
     // Show skeleton loading
     const tableWrapper = document.querySelector(".table-wrapper");
     if (tableWrapper && typeof skeletonManager !== "undefined") {
-      // Hide the actual table
-      const trashTable = document.getElementById("trashTable");
-      if (trashTable) {
-        trashTable.style.display = "none";
-      }
-
-      // Show skeleton
-      skeletonManager.showFileListSkeleton(tableWrapper, 6);
+      // Show skeleton for trash table
+      skeletonManager.showTrashSkeleton(tableWrapper, 6);
     }
 
     try {
@@ -263,20 +230,23 @@ class RecycleBinManager {
     }
   }
 
-  permanentlyDeleteFile(fileId, fileName, isFolder = false) {
+  async permanentlyDeleteFile(fileId, fileName, isFolder = false) {
     const itemType = isFolder ? "thư mục" : "tệp";
 
-    this.showModal(
-      "Xóa vĩnh viễn",
-      `Bạn có chắc chắn muốn xóa vĩnh viễn ${itemType} "${fileName}"? Hành động này không thể hoàn tác!`,
-      async () => {
-        await this.performPermanentDelete(fileId, fileName, isFolder);
-      }
-    );
+    const confirmed = await dialogManager.showConfirm({
+      title: "Xóa vĩnh viễn",
+      message: `Bạn có chắc chắn muốn xóa vĩnh viễn ${itemType} "${fileName}"? Hành động này không thể hoàn tác!`,
+      confirmText: "Xóa vĩnh viễn",
+      cancelText: "Hủy",
+      type: "danger",
+    });
+
+    if (confirmed) {
+      await this.performPermanentDelete(fileId, fileName, isFolder);
+    }
   }
 
   async performPermanentDelete(fileId, fileName, isFolder) {
-    this.hideModal();
     this.showProgress(`Đang xóa vĩnh viễn "${fileName}"...`);
 
     try {
@@ -304,23 +274,26 @@ class RecycleBinManager {
     }
   }
 
-  emptyTrash() {
+  async emptyTrash() {
     if (!this.trashedFiles || this.trashedFiles.length === 0) {
       showToast("Thùng rác đã trống!", "info");
       return;
     }
 
-    this.showModal(
-      "Xóa tất cả",
-      `Bạn có chắc chắn muốn xóa vĩnh viễn tất cả ${this.trashedFiles.length} mục trong thùng rác? Hành động này không thể hoàn tác!`,
-      async () => {
-        await this.performEmptyTrash();
-      }
-    );
+    const confirmed = await dialogManager.showConfirm({
+      title: "Xóa tất cả",
+      message: `Bạn có chắc chắn muốn xóa vĩnh viễn tất cả ${this.trashedFiles.length} mục trong thùng rác? Hành động này không thể hoàn tác!`,
+      confirmText: "Xóa tất cả",
+      cancelText: "Hủy",
+      type: "danger",
+    });
+
+    if (confirmed) {
+      await this.performEmptyTrash();
+    }
   }
 
   async performEmptyTrash() {
-    this.hideModal();
     this.showProgress("Đang xóa tất cả...");
 
     try {
@@ -346,41 +319,6 @@ class RecycleBinManager {
       showToast("Lỗi xóa tất cả!", "error");
     } finally {
       this.hideProgress();
-    }
-  }
-
-  showModal(title, message, onConfirm) {
-    const modal = document.getElementById("confirmModal");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalMessage = document.getElementById("modalMessage");
-    const modalConfirm = document.getElementById("modalConfirm");
-
-    if (!modal || !modalTitle || !modalMessage || !modalConfirm) {
-      console.error("Modal elements not found");
-      return;
-    }
-
-    modalTitle.textContent = title;
-    modalMessage.textContent = message;
-
-    // Remove previous event listeners
-    const newConfirmBtn = modalConfirm.cloneNode(true);
-    modalConfirm.parentNode.replaceChild(newConfirmBtn, modalConfirm);
-
-    // Add new event listener
-    newConfirmBtn.addEventListener("click", () => {
-      if (onConfirm) {
-        onConfirm();
-      }
-    });
-
-    modal.style.display = "flex";
-  }
-
-  hideModal() {
-    const modal = document.getElementById("confirmModal");
-    if (modal) {
-      modal.style.display = "none";
     }
   }
 

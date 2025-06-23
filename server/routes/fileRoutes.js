@@ -3,6 +3,7 @@ const multer = require("multer");
 const { body, param, query, validationResult } = require("express-validator");
 const fs = require("fs");
 const path = require("path");
+const archiver = require("archiver");
 
 const driveService = require("../utils/driveService");
 const config = require("../config/config");
@@ -59,18 +60,61 @@ router.get("/upload-config", (req, res) => {
   }
 });
 
-// GET /api/files - List files in a folder
+// GET /api/files - List files in a folder with pagination support
 router.get(
   "/files",
-  [query("parentId").optional().isString().trim()],
+  [
+    query("parentId").optional().isString().trim(),
+    query("page")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("Page must be a positive integer"),
+    query("limit")
+      .optional()
+      .isInt({ min: 1, max: 1000 })
+      .withMessage("Limit must be between 1 and 1000"),
+    query("sortBy")
+      .optional()
+      .isIn(["name", "modifiedTime", "size"])
+      .withMessage("sortBy must be 'name', 'modifiedTime', or 'size'"),
+    query("sortOrder")
+      .optional()
+      .isIn(["asc", "desc"])
+      .withMessage("sortOrder must be 'asc' or 'desc'"),
+  ],
   handleValidationErrors,
   async (req, res) => {
     try {
-      const files = await driveService.listFiles(req.query.parentId);
+      const {
+        parentId,
+        page = 1,
+        limit = 100, // Default to 100 files per page (no pagination by default for backward compatibility)
+        sortBy = "name",
+        sortOrder = "asc",
+      } = req.query;
+
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+
+      // Call driveService with pagination parameters
+      const result = await driveService.listFiles(parentId, {
+        page: pageNum,
+        limit: limitNum,
+        sortBy,
+        sortOrder,
+      });
 
       // Ensure UTF-8 encoding for response
       res.setHeader("Content-Type", "application/json; charset=utf-8");
-      res.json(files);
+
+      // Check if client expects paginated response or legacy format
+      if (req.query.page !== undefined || req.query.limit !== undefined) {
+        // Return paginated response
+        res.json(result);
+      } else {
+        // Return legacy format for backward compatibility
+        res.json(result.files || result);
+      }
     } catch (error) {
       console.error("List files error:", error);
       res.status(500).json({
@@ -382,6 +426,134 @@ router.delete("/empty-trash", async (req, res) => {
     });
   }
 });
+
+// ===== FOLDER DOWNLOAD ROUTES =====
+
+// GET /api/download-folder/:id - Download folder as ZIP
+router.get(
+  "/download-folder/:id",
+  [param("id").isString().trim().notEmpty()],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const folderId = req.params.id;
+      console.log(`📦 Starting folder ZIP download for ID: ${folderId}`);
+
+      // Get folder info and validate it's a folder
+      const folderInfo = await driveService.getFolderInfo(folderId);
+      console.log(`📁 Folder info:`, folderInfo);
+
+      if (!folderInfo) {
+        console.error(`❌ Folder not found: ${folderId}`);
+        return res.status(404).json({
+          error: "Folder not found",
+          detail: "The specified folder ID does not exist",
+        });
+      }
+
+      if (!folderInfo.isFolder) {
+        console.error(
+          `❌ ID is not a folder: ${folderId}, mimeType: ${folderInfo.mimeType}`
+        );
+        return res.status(400).json({
+          error: "Invalid folder",
+          detail: `The specified ID is not a folder (mimeType: ${folderInfo.mimeType})`,
+        });
+      }
+
+      console.log(`✅ Valid folder: ${folderInfo.name}`);
+
+      const folderName = folderInfo.name || "folder";
+      const sanitizedName = folderName.replace(/[^a-zA-Z0-9_\-\.\s]/g, "_");
+
+      // Set response headers for ZIP download
+      res.setHeader("Content-Type", "application/zip");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${encodeURIComponent(sanitizedName)}.zip"`
+      );
+
+      // Create archiver instance
+      const archive = archiver("zip", {
+        zlib: { level: 6 }, // Compression level (0-9, 6 is good balance)
+      });
+
+      // Handle archiver warnings and errors
+      archive.on("warning", err => {
+        if (err.code === "ENOENT") {
+          console.warn("Archive warning:", err);
+        } else {
+          console.error("Archive error:", err);
+        }
+      });
+
+      archive.on("error", err => {
+        console.error("Archive error:", err);
+        if (!res.headersSent) {
+          res.status(500).json({
+            error: "Failed to create ZIP archive",
+            detail: err.message,
+          });
+        }
+      });
+
+      // Pipe archive to response
+      archive.pipe(res);
+
+      // Get all files in folder recursively and add to archive
+      await addFolderToArchive(archive, folderId, "");
+
+      // Finalize archive (this will trigger the 'end' event)
+      await archive.finalize();
+    } catch (error) {
+      console.error("Folder download error:", error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          error: "Failed to download folder",
+          detail: error.message,
+        });
+      }
+    }
+  }
+);
+
+// Helper function to recursively add folder contents to archive
+async function addFolderToArchive(archive, folderId, basePath) {
+  try {
+    const files = await driveService.listFiles(folderId);
+
+    for (const file of files) {
+      const filePath = basePath ? `${basePath}/${file.name}` : file.name;
+
+      if (file.isFolder) {
+        // Recursively add subfolder contents
+        await addFolderToArchive(archive, file.id, filePath);
+      } else {
+        try {
+          // Download file and add to archive
+          const { fileName, stream } = await driveService.downloadFile(file.id);
+
+          // Add file to archive with proper path
+          archive.append(stream, {
+            name: filePath,
+            date: file.modifiedTime ? new Date(file.modifiedTime) : new Date(),
+          });
+
+          console.log(`📁 Added to ZIP: ${filePath}`);
+        } catch (fileError) {
+          console.error(
+            `❌ Failed to add file ${file.name} to archive:`,
+            fileError
+          );
+          // Continue with other files even if one fails
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error adding folder to archive:", error);
+    throw error;
+  }
+}
 
 // Error handling for multer
 router.use((error, req, res, next) => {

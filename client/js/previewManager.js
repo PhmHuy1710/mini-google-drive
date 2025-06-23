@@ -70,7 +70,12 @@ class PreviewManager {
     // Download from preview
     downloadBtn?.addEventListener("click", () => {
       if (this.currentFile) {
-        window.open(`/api/download/${this.currentFile.id}`, "_blank");
+        if (typeof fileManager !== "undefined" && fileManager) {
+          fileManager.downloadFile(this.currentFile.id, this.currentFile.name);
+        } else {
+          // Fallback
+          window.open(`/api/download/${this.currentFile.id}`, "_blank");
+        }
       }
     });
 
@@ -147,7 +152,7 @@ class PreviewManager {
         <div class="preview-error">
           <span class="mdi mdi-alert-circle"></span>
           <span>Không thể xem trước file này</span>
-          <button class="btn btn-primary" onclick="window.open('/api/download/${file.id}', '_blank')">
+          <button class="btn btn-primary" onclick="if (typeof fileManager !== 'undefined' && fileManager) { fileManager.downloadFile('${file.id}', '${file.name}'); } else { window.open('/api/download/${file.id}', '_blank'); }">
             <span class="mdi mdi-download"></span> Tải về để xem
           </button>
         </div>
@@ -229,7 +234,7 @@ class PreviewManager {
           <div class="preview-error">
             <span class="mdi mdi-file-pdf-box"></span>
             <span>Không thể xem PDF trong trình duyệt</span>
-            <button class="btn btn-primary" onclick="window.open('/api/download/${fileId}', '_blank')">
+            <button class="btn btn-primary" onclick="if (typeof fileManager !== 'undefined' && fileManager) { fileManager.downloadFile('${fileId}', '${this.currentFile.name}'); } else { window.open('/api/download/${fileId}', '_blank'); }">
               <span class="mdi mdi-open-in-new"></span> Mở trong tab mới
             </button>
           </div>
@@ -300,7 +305,7 @@ class PreviewManager {
         <span class="mdi ${info.icon} preview-file-icon"></span>
         <h3>${info.text}</h3>
         <p>Không thể xem trước loại file này</p>
-        <button class="btn btn-primary" onclick="window.open('/api/download/${this.currentFile.id}', '_blank')">
+        <button class="btn btn-primary" onclick="if (typeof fileManager !== 'undefined' && fileManager) { fileManager.downloadFile('${this.currentFile.id}', '${this.currentFile.name}'); } else { window.open('/api/download/${this.currentFile.id}', '_blank'); }">
           <span class="mdi mdi-download"></span> Tải về để mở
         </button>
       </div>
@@ -385,4 +390,3 @@ class PreviewManager {
 
 // Export instance
 const previewManager = new PreviewManager();
- 

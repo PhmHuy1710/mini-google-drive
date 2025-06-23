@@ -384,7 +384,8 @@ body {
 
 .upload-label input { display: none; }
 
-.btn-create, .btn-primary { 
+.btn-create, .btn-primary {
+  height: 60px;
   background: #1976d2; color: #fff; border: none;
 }
 
@@ -1281,6 +1282,18 @@ body {
   border-color: #4caf50;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.btn-download-zip {
+  color: #607d8b;
+}
+
+.btn-download-zip:hover {
+  background: #607d8b;
+  color: #fff;
+  border-color: #607d8b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(96, 125, 139, 0.3);
 }
 
 .btn-preview {
@@ -3901,6 +3914,15 @@ body {
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s infinite;
   border-radius: 4px;
+}
+
+/* Skeleton mode for tbody */
+.skeleton-mode {
+  pointer-events: none;
+}
+
+.skeleton-mode.search-skeleton {
+  /* Additional styles for search skeleton if needed */
 }
 
 @keyframes skeleton-loading {

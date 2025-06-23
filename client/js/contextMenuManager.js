@@ -382,7 +382,12 @@ class ContextMenuManager {
         break;
 
       case "download":
-        window.open(`/api/download/${file.id}`, "_blank");
+        if (typeof fileManager !== "undefined" && fileManager) {
+          fileManager.downloadFile(file.id, file.name);
+        } else {
+          // Fallback
+          window.open(`/api/download/${file.id}`, "_blank");
+        }
         break;
 
       case "rename":

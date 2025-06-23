@@ -207,13 +207,18 @@ class ViewManager {
                 data-file-id="${file.id}">
           <span class="mdi mdi-eye"></span>
         </button>
-        `
-            : ""
-        }
         <button class="file-grid-action btn-download" title="Tải xuống"
                 data-file-id="${file.id}" data-file-name="${file.name}">
           <span class="mdi mdi-download"></span>
         </button>
+        `
+            : `
+        <button class="file-grid-action btn-download-zip" title="Tải về dưới dạng ZIP"
+                data-file-id="${file.id}" data-file-name="${file.name}">
+          <span class="mdi mdi-folder-zip"></span>
+        </button>
+        `
+        }
         <button class="file-grid-action btn-rename" title="Đổi tên"
                 data-file-id="${file.id}" data-file-name="${file.name}">
           <span class="mdi mdi-pencil"></span>
@@ -237,9 +242,29 @@ class ViewManager {
 
     // Add click handler for opening files/folders
     item.addEventListener("click", e => {
-      // Don't trigger if clicking on action buttons
-      if (e.target.closest(".file-grid-action")) return;
+      // Handle action button clicks
+      if (e.target.closest(".file-grid-action")) {
+        const action = e.target.closest(".file-grid-action");
 
+        if (action.classList.contains("btn-download-zip")) {
+          // Handle ZIP download for folders
+          if (typeof fileManager !== "undefined" && fileManager) {
+            fileManager.downloadFolderAsZip(file.id, file.name);
+          }
+        } else if (action.classList.contains("btn-download")) {
+          // Handle regular file download
+          if (
+            !file.isFolder &&
+            typeof fileManager !== "undefined" &&
+            fileManager
+          ) {
+            fileManager.downloadFile(file.id, file.name);
+          }
+        }
+        return; // Don't trigger item click
+      }
+
+      // Handle item click (open folder/preview file)
       if (file.isFolder) {
         if (typeof fileManager !== "undefined" && fileManager) {
           fileManager.openFolder(file.id);

@@ -276,17 +276,38 @@ class MultiSelectManager {
     }
 
     if (downloadableFiles.length === 1) {
-      // Single file download
-      window.open(`/api/download/${downloadableFiles[0].id}`, "_blank");
-      showToast("Đang tải file...", "info");
+      // Single file download with toast notification
+      if (typeof fileManager !== "undefined" && fileManager) {
+        fileManager.downloadFile(
+          downloadableFiles[0].id,
+          downloadableFiles[0].name
+        );
+      } else {
+        // Fallback
+        window.open(`/api/download/${downloadableFiles[0].id}`, "_blank");
+        showToast("Đang tải file...", "info");
+      }
     } else {
-      // Multiple files - for now just download one by one
+      // Multiple files - show initial toast then stagger downloads
+      showToast(`Đang tải ${downloadableFiles.length} file...`, "info");
+
       downloadableFiles.forEach((file, index) => {
         setTimeout(() => {
-          window.open(`/api/download/${file.id}`, "_blank");
+          if (typeof fileManager !== "undefined" && fileManager) {
+            // Use fileManager method for consistency (but don't show individual toasts for bulk)
+            const link = document.createElement("a");
+            link.href = `/api/download/${file.id}`;
+            link.download = file.name;
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            // Fallback
+            window.open(`/api/download/${file.id}`, "_blank");
+          }
         }, index * 500); // Stagger downloads
       });
-      showToast(`Đang tải ${downloadableFiles.length} file...`, "info");
     }
   }
 
@@ -307,44 +328,47 @@ class MultiSelectManager {
       confirmMessage += `${folderCount} thư mục?`;
     }
 
-    showConfirm(
-      confirmMessage,
-      async () => {
-        try {
-          showToast("Đang xóa...", "info");
-          const deletePromises = Array.from(this.selectedFiles).map(fileId =>
-            fetch(`/api/delete/${fileId}`, { method: "DELETE" })
-          );
+    const confirmed = await dialogManager.showConfirm({
+      title: "Xác nhận xóa hàng loạt",
+      message: confirmMessage,
+      confirmText: "Xóa tất cả",
+      cancelText: "Hủy",
+      type: "warning",
+    });
 
-          const results = await Promise.allSettled(deletePromises);
-          const successful = results.filter(
-            r => r.status === "fulfilled" && r.value.ok
-          ).length;
-          const failed = results.length - successful;
+    if (confirmed) {
+      try {
+        showToast("Đang xóa...", "info");
+        const deletePromises = Array.from(this.selectedFiles).map(fileId =>
+          fetch(`/api/delete/${fileId}`, { method: "DELETE" })
+        );
 
-          if (successful > 0) {
-            this.clearSelection();
-            await fileManager.renderFiles(fileManager.currentFolderId);
-            fetchStorage();
+        const results = await Promise.allSettled(deletePromises);
+        const successful = results.filter(
+          r => r.status === "fulfilled" && r.value.ok
+        ).length;
+        const failed = results.length - successful;
 
-            if (failed === 0) {
-              showToast(`Đã xóa ${successful} mục!`, "success");
-            } else {
-              showToast(
-                `Đã xóa ${successful} mục, ${failed} mục lỗi`,
-                "warning"
-              );
-            }
+        if (successful > 0) {
+          this.clearSelection();
+          await fileManager.renderFiles(fileManager.currentFolderId);
+          fetchStorage();
+
+          if (failed === 0) {
+            showToast(`Đã xóa ${successful} mục!`, "success");
           } else {
-            showToast("Không thể xóa file/thư mục!", "error");
+            showToast(`Đã xóa ${successful} mục, ${failed} mục lỗi`, "warning");
           }
-        } catch (error) {
-          console.error("Bulk delete error:", error);
-          showToast("Lỗi xóa file!", "error");
+        } else {
+          showToast("Không thể xóa file/thư mục!", "error");
         }
-      },
-      () => showToast("Đã hủy thao tác xóa.", "info")
-    );
+      } catch (error) {
+        console.error("Bulk delete error:", error);
+        showToast("Lỗi xóa file!", "error");
+      }
+    } else {
+      showToast("Đã hủy thao tác xóa.", "info");
+    }
   }
 
   clearSelection() {

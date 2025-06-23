@@ -178,17 +178,24 @@ class SearchManager {
     this.searchTerm = term;
 
     try {
-      // Show skeleton loading
-      const container = document.querySelector(".container");
-      if (typeof skeletonManager !== "undefined" && skeletonManager) {
-        skeletonManager.showSearchSkeleton(container, 6);
+      // Show skeleton loading for search results
+      const tableWrapper = document.querySelector(".table-wrapper");
+      if (
+        typeof skeletonManager !== "undefined" &&
+        skeletonManager &&
+        tableWrapper
+      ) {
+        // Clear existing content and show search skeleton
+        const tbody = document.getElementById("fileListBody");
+        if (tbody) tbody.innerHTML = "";
+        skeletonManager.showSearchSkeleton(tableWrapper, 6);
       }
 
       showToast("Đang tìm kiếm...", "info");
       const response = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
       const results = await response.json();
 
-      // Hide skeleton
+      // Hide skeleton loading
       if (typeof skeletonManager !== "undefined" && skeletonManager) {
         skeletonManager.hideAllSkeletons();
       }
@@ -196,7 +203,7 @@ class SearchManager {
       this.renderSearchResults(results, term);
       showToast(`Tìm thấy ${results.length} kết quả`, "success");
     } catch (error) {
-      // Hide skeleton on error
+      // Hide skeleton loading on error
       if (typeof skeletonManager !== "undefined" && skeletonManager) {
         skeletonManager.hideAllSkeletons();
       }

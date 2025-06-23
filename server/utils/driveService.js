@@ -165,20 +165,49 @@ class DriveService {
     }
   }
 
-  async listFiles(parentId) {
+  async listFiles(parentId, paginationOptions = {}) {
     try {
       const rootId = await this.ensureUploadRoot();
       const actualParentId = parentId || rootId;
 
+      // Extract pagination options with defaults
+      const {
+        page = 1,
+        limit = 100,
+        sortBy = "name",
+        sortOrder = "asc",
+      } = paginationOptions;
+
+      // Build Google Drive API orderBy parameter
+      let orderBy = "folder"; // Always sort folders first
+
+      // Add secondary sort based on user preference
+      if (sortBy === "name") {
+        orderBy += ",name";
+      } else if (sortBy === "modifiedTime") {
+        orderBy += ",modifiedTime";
+      } else if (sortBy === "size") {
+        orderBy += ",quotaBytesUsed"; // Google Drive API field for file size
+      }
+
+      // Add sort direction
+      if (sortOrder === "desc") {
+        orderBy += " desc";
+      }
+
+      // For pagination, we need to fetch all files first, then paginate
+      // Google Drive API doesn't support offset-based pagination directly
       const result = await this.drive.files.list({
         q: `'${actualParentId}' in parents and trashed=false`,
         fields:
           "files(id, name, modifiedTime, size, mimeType, webViewLink, parents)",
         spaces: "drive",
-        orderBy: "folder,name",
+        orderBy: orderBy,
+        pageSize: 1000, // Fetch up to 1000 files (Google Drive limit)
       });
 
-      const files = await Promise.all(
+      // Process all files first
+      const allFiles = await Promise.all(
         (result.data.files || []).map(async f => {
           const isFolder = f.mimeType === "application/vnd.google-apps.folder";
           let shareLink = f.webViewLink;
@@ -196,7 +225,80 @@ class DriveService {
         })
       );
 
-      return files;
+      // Apply client-side sorting if needed (for more complex sorting)
+      let sortedFiles = [...allFiles];
+
+      if (sortBy === "name") {
+        sortedFiles.sort((a, b) => {
+          // Folders first, then files
+          if (a.isFolder && !b.isFolder) return -1;
+          if (!a.isFolder && b.isFolder) return 1;
+
+          const nameA = (a.name || "").toLowerCase();
+          const nameB = (b.name || "").toLowerCase();
+
+          return sortOrder === "asc"
+            ? nameA.localeCompare(nameB, "vi", { numeric: true })
+            : nameB.localeCompare(nameA, "vi", { numeric: true });
+        });
+      } else if (sortBy === "modifiedTime") {
+        sortedFiles.sort((a, b) => {
+          // Folders first, then files
+          if (a.isFolder && !b.isFolder) return -1;
+          if (!a.isFolder && b.isFolder) return 1;
+
+          const timeA = new Date(a.modifiedTime || 0);
+          const timeB = new Date(b.modifiedTime || 0);
+
+          return sortOrder === "asc" ? timeA - timeB : timeB - timeA;
+        });
+      } else if (sortBy === "size") {
+        sortedFiles.sort((a, b) => {
+          // Folders first, then files
+          if (a.isFolder && !b.isFolder) return -1;
+          if (!a.isFolder && b.isFolder) return 1;
+
+          const sizeA = parseInt(a.size || 0);
+          const sizeB = parseInt(b.size || 0);
+
+          return sortOrder === "asc" ? sizeA - sizeB : sizeB - sizeA;
+        });
+      }
+
+      // Calculate pagination
+      const totalFiles = sortedFiles.length;
+      const totalPages = Math.ceil(totalFiles / limit);
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+
+      // Get files for current page
+      const paginatedFiles = sortedFiles.slice(startIndex, endIndex);
+
+      // Return pagination response format
+      const response = {
+        files: paginatedFiles,
+        pagination: {
+          totalFiles,
+          totalPages,
+          currentPage: page,
+          limit,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+          startIndex: startIndex + 1,
+          endIndex: Math.min(endIndex, totalFiles),
+        },
+      };
+
+      // If no pagination was requested, return legacy format
+      if (
+        page === 1 &&
+        limit >= 100 &&
+        Object.keys(paginationOptions).length === 0
+      ) {
+        return sortedFiles; // Legacy format for backward compatibility
+      }
+
+      return response;
     } catch (error) {
       console.error("Error listing files:", error);
       throw error;
@@ -207,13 +309,18 @@ class DriveService {
     try {
       const result = await this.drive.files.get({
         fileId: folderId,
-        fields: "id, name, parents",
+        fields: "id, name, parents, mimeType",
       });
+
+      const isFolder =
+        result.data.mimeType === "application/vnd.google-apps.folder";
 
       return {
         id: result.data.id,
         name: result.data.name,
         parentId: result.data.parents ? result.data.parents[0] : null,
+        isFolder: isFolder,
+        mimeType: result.data.mimeType,
       };
     } catch (error) {
       console.error("Error getting folder info:", error);

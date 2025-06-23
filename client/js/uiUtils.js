@@ -39,40 +39,7 @@ function showToast(msg, type = "info") {
   }, 4000);
 }
 
-// Confirmation dialog
-function showConfirm(msg, onOk, onCancel) {
-  let old = document.getElementById("modalConfirm");
-  if (old) old.remove();
-
-  const modal = document.createElement("div");
-  modal.className = "modal-bg";
-  modal.id = "modalConfirm";
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-title"><span class="mdi mdi-alert-outline"></span> Xác nhận</div>
-      <div style="margin: 16px 0 13px 0; font-size:16.2px; color:#212529;">${msg}</div>
-      <div class="modal-actions">
-        <button class="btn btn-primary" id="btnOk">Đồng ý</button>
-        <button class="btn btn-cancel" id="btnCancel">Hủy</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  setTimeout(() => {
-    document.getElementById("btnOk").focus();
-  }, 70);
-
-  document.getElementById("btnOk").onclick = function () {
-    modal.remove();
-    if (onOk) onOk();
-  };
-
-  document.getElementById("btnCancel").onclick = function () {
-    modal.remove();
-    if (onCancel) onCancel();
-  };
-}
+// Note: showConfirm is deprecated - use dialogManager.showConfirm instead
 
 // Format file size
 function formatSize(bytes) {
@@ -196,13 +163,4 @@ async function promptCreateFolder() {
   }
 }
 
-// Legacy functions for backward compatibility (can be removed later)
-function closeModalCreateFolder() {
-  // No longer needed with new dialog system
-}
-
-async function submitCreateFolder(name) {
-  if (name) {
-    await fileManager.createFolder(name);
-  }
-}
+// Legacy functions removed - all functionality moved to dialogManager
