@@ -167,6 +167,11 @@ class FileManager {
         if (typeof viewManager !== "undefined" && viewManager) {
           viewManager.renderFiles([]);
         }
+
+        // Hide pagination for empty folder
+        if (typeof paginationManager !== "undefined" && paginationManager) {
+          paginationManager.hidePagination();
+        }
         return;
       }
 
@@ -191,6 +196,9 @@ class FileManager {
       if (multiSelectManager) {
         multiSelectManager.onFileListRendered();
       }
+
+      // Setup drag and drop for file operations
+      this.setupFileDragAndDrop();
     } catch (error) {
       console.error("Error rendering files:", error);
       const emptyNote = document.getElementById("emptyNote");
@@ -202,9 +210,189 @@ class FileManager {
     }
   }
 
+  // New method for paginated file loading
+  async loadFilesWithPagination(page = 1, limit = 50) {
+    try {
+      // Get containers for skeleton loading
+      const tableWrapper = document.querySelector(".table-wrapper");
+      const fileGrid = document.getElementById("fileGrid");
+      const tbody = document.getElementById("fileListBody");
+      const emptyNote = document.getElementById("emptyNote");
+
+      if (!tbody || !emptyNote) {
+        console.error("Required DOM elements not found");
+        return;
+      }
+
+      // Hide empty note and clear existing content
+      emptyNote.style.display = "none";
+      tbody.innerHTML = "";
+
+      // Show skeleton loading based on current view
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        const isGridView =
+          typeof viewManager !== "undefined" &&
+          viewManager &&
+          viewManager.isGridView &&
+          viewManager.isGridView();
+
+        if (isGridView && fileGrid) {
+          fileGrid.innerHTML = "";
+          skeletonManager.showFileGridSkeleton(fileGrid, limit);
+        } else if (tableWrapper) {
+          skeletonManager.showFileListSkeleton(
+            tableWrapper,
+            Math.min(limit, 8)
+          );
+        }
+      }
+
+      // Fetch files with pagination
+      const result = await this.fetchFilesWithPagination(
+        this.currentFolderId,
+        page,
+        limit
+      );
+
+      // Hide skeleton loading
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        skeletonManager.hideAllSkeletons();
+      }
+
+      // Handle response format
+      let files, pagination;
+      if (result.files && result.pagination) {
+        // Paginated response
+        files = result.files;
+        pagination = result.pagination;
+        this.currentFiles = files;
+      } else {
+        // Legacy response (array of files)
+        files = Array.isArray(result) ? result : [];
+        this.currentFiles = files;
+
+        // Create pagination metadata for legacy response
+        pagination = {
+          totalFiles: files.length,
+          totalPages: Math.ceil(files.length / limit),
+          currentPage: page,
+          limit: limit,
+          hasNext: false,
+          hasPrev: false,
+        };
+      }
+
+      // Update pagination UI
+      if (typeof paginationManager !== "undefined" && paginationManager) {
+        paginationManager.updatePagination(pagination);
+      }
+
+      // Sort files using sortManager (client-side sorting for small datasets)
+      const sortedFiles = sortManager ? sortManager.sortFiles(files) : files;
+
+      if (!sortedFiles || !sortedFiles.length) {
+        emptyNote.style.display = "block";
+        tbody.innerHTML = "";
+
+        if (typeof viewManager !== "undefined" && viewManager) {
+          viewManager.renderFiles([]);
+        }
+        return;
+      }
+
+      emptyNote.style.display = "none";
+
+      // Render files in current view
+      if (
+        typeof viewManager !== "undefined" &&
+        viewManager &&
+        viewManager.renderFiles(sortedFiles)
+      ) {
+        // ViewManager handled the rendering (grid view)
+        tbody.innerHTML = "";
+      } else {
+        // Render list view (table)
+        tbody.innerHTML = sortedFiles
+          .map(file => this.renderFileRow(file))
+          .join("");
+      }
+
+      // Notify multi-select manager about file list update
+      if (multiSelectManager) {
+        multiSelectManager.onFileListRendered();
+      }
+
+      // Setup drag and drop for file operations
+      this.setupFileDragAndDrop();
+    } catch (error) {
+      console.error("Error loading files with pagination:", error);
+
+      // Hide skeleton on error
+      if (typeof skeletonManager !== "undefined" && skeletonManager) {
+        skeletonManager.hideAllSkeletons();
+      }
+
+      const emptyNote = document.getElementById("emptyNote");
+      if (emptyNote) {
+        emptyNote.style.display = "block";
+        emptyNote.innerHTML = "Lỗi tải danh sách file";
+      }
+
+      // Show error toast
+      showToast("Lỗi tải file với phân trang", "error");
+    }
+  }
+
+  // New method for fetching files with pagination
+  async fetchFilesWithPagination(folderId, page = 1, limit = 50) {
+    try {
+      // Build URL with pagination parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+
+      if (folderId) {
+        params.append("parentId", folderId);
+      }
+
+      // Add sorting parameters if available
+      if (
+        typeof sortManager !== "undefined" &&
+        sortManager &&
+        typeof sortManager.getCurrentSort === "function"
+      ) {
+        try {
+          const sortState = sortManager.getCurrentSort();
+          if (sortState && sortState.column) {
+            params.append("sortBy", sortState.column);
+            params.append("sortOrder", sortState.direction);
+          }
+        } catch (error) {
+          console.warn("Error getting sort state:", error);
+        }
+      }
+
+      const url = `/api/files?${params.toString()}`;
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const result = await res.json();
+      return result;
+    } catch (error) {
+      console.error("Error fetching files with pagination:", error);
+      throw error;
+    }
+  }
+
   renderFileRow(file) {
     return `
-      <tr data-file-id="${file.id}" data-is-folder="${file.isFolder}">
+      <tr data-file-id="${file.id}" data-is-folder="${
+      file.isFolder
+    }" data-file-type="${file.isFolder ? "folder" : "file"}">
         <td class="col-name">
           ${getFileTypeIcon(file)}
           ${
@@ -245,7 +433,29 @@ class FileManager {
 
   async openFolder(folderId, pushBread = true) {
     this.currentFolderId = folderId;
-    await this.renderFiles(folderId);
+
+    // Always try to use pagination first for better performance
+    if (typeof paginationManager !== "undefined" && paginationManager) {
+      try {
+        // Restore pagination state for this folder
+        paginationManager.restoreFolderPageState(folderId);
+
+        const page = paginationManager.getCurrentPage() || 1;
+        const limit = paginationManager.getPageSize() || 50;
+
+        // Use pagination for all folder loads
+        await this.loadFilesWithPagination(page, limit);
+      } catch (error) {
+        console.warn(
+          "Error using pagination, falling back to renderFiles:",
+          error
+        );
+        await this.renderFiles(folderId);
+      }
+    } else {
+      console.log("Pagination manager not available, using renderFiles");
+      await this.renderFiles(folderId);
+    }
 
     if (pushBread) {
       let name = "Tệp của bạn";
@@ -323,6 +533,15 @@ class FileManager {
 
     // Setup dropdown events
     this.setupBreadcrumbDropdown();
+
+    // Setup breadcrumb drop zones if drag operation is active
+    if (
+      typeof fileOperationsManager !== "undefined" &&
+      fileOperationsManager &&
+      fileOperationsManager.isDragging
+    ) {
+      fileOperationsManager.setupBreadcrumbDropZones();
+    }
   }
 
   setupBreadcrumbDropdown() {
@@ -362,22 +581,52 @@ class FileManager {
   }
 
   async createFolder(name) {
-    if (!name) {
+    if (!name || name.trim() === "") {
       showToast("Vui lòng nhập tên thư mục!", "error");
       return;
     }
 
-    showToast("Đang tạo thư mục...", "info");
-    const res = await fetch("/api/create-folder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, parentId: this.currentFolderId }),
-    });
+    try {
+      showToast("Đang tạo thư mục...", "info");
 
-    if (res.ok) {
-      await this.renderFiles(this.currentFolderId);
-      showToast("Đã tạo thư mục!", "success");
-    } else {
+      // Build request body
+      const requestBody = { name: name.trim() };
+
+      // Only include parentId if it's not null/undefined
+      if (this.currentFolderId) {
+        requestBody.parentId = this.currentFolderId;
+      }
+
+      const res = await fetch("/api/create-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (res.ok) {
+        // Use pagination-aware reload if available
+        if (
+          typeof paginationManager !== "undefined" &&
+          paginationManager &&
+          paginationManager.isActive()
+        ) {
+          const page = paginationManager.getCurrentPage();
+          const limit = paginationManager.getPageSize();
+          await this.loadFilesWithPagination(page, limit);
+        } else {
+          await this.renderFiles(this.currentFolderId);
+        }
+        showToast("Đã tạo thư mục!", "success");
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Create folder error:", errorData);
+        showToast(
+          `Lỗi tạo thư mục: ${errorData.error || "Unknown error"}`,
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Create folder exception:", error);
       showToast("Lỗi tạo thư mục!", "error");
     }
   }
@@ -532,6 +781,41 @@ class FileManager {
       console.error("Error downloading folder as ZIP:", error);
       showToast("Lỗi tải về thư mục!", "error");
     }
+  }
+
+  // Setup drag and drop for file operations
+  setupFileDragAndDrop() {
+    if (
+      typeof fileOperationsManager === "undefined" ||
+      !fileOperationsManager
+    ) {
+      return; // File operations manager not available
+    }
+
+    // Setup drag and drop for all file rows
+    const fileRows = document.querySelectorAll("tr[data-file-id]");
+    fileRows.forEach(row => {
+      const fileId = row.getAttribute("data-file-id");
+      const isFolder = row.getAttribute("data-is-folder") === "true";
+
+      // Find file data
+      const fileData = this.currentFiles?.find(f => f.id === fileId);
+      if (fileData) {
+        fileOperationsManager.setupDragAndDrop(row, fileData);
+      }
+    });
+
+    // Setup drag and drop for grid view items if they exist
+    const gridItems = document.querySelectorAll(
+      ".file-grid-item[data-file-id]"
+    );
+    gridItems.forEach(item => {
+      const fileId = item.getAttribute("data-file-id");
+      const fileData = this.currentFiles?.find(f => f.id === fileId);
+      if (fileData) {
+        fileOperationsManager.setupDragAndDrop(item, fileData);
+      }
+    });
   }
 }
 

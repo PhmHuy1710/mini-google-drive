@@ -415,6 +415,64 @@ class ContextMenuManager {
         }
         break;
 
+      case "cut":
+        // Cut operation - prepare for move
+        if (
+          typeof fileOperationsManager !== "undefined" &&
+          fileOperationsManager
+        ) {
+          fileOperationsManager.prepareCutOperation([file]);
+        } else {
+          showToast("File operations manager not available", "error");
+        }
+        break;
+
+      case "copy":
+        // Copy operation - prepare for copy
+        if (
+          typeof fileOperationsManager !== "undefined" &&
+          fileOperationsManager
+        ) {
+          fileOperationsManager.prepareCopyOperation([file]);
+        } else {
+          showToast("File operations manager not available", "error");
+        }
+        break;
+
+      case "move":
+        // Show folder tree for move operation
+        if (
+          typeof fileOperationsManager !== "undefined" &&
+          fileOperationsManager
+        ) {
+          // Temporarily select this file for move operation
+          if (typeof multiSelectManager !== "undefined" && multiSelectManager) {
+            multiSelectManager.clearSelection();
+            multiSelectManager.selectFile(file.id);
+          }
+          fileOperationsManager.showFolderTreeDialog("move");
+        } else {
+          showToast("File operations manager not available", "error");
+        }
+        break;
+
+      case "copy-to":
+        // Show folder tree for copy operation
+        if (
+          typeof fileOperationsManager !== "undefined" &&
+          fileOperationsManager
+        ) {
+          // Temporarily select this file for copy operation
+          if (typeof multiSelectManager !== "undefined" && multiSelectManager) {
+            multiSelectManager.clearSelection();
+            multiSelectManager.selectFile(file.id);
+          }
+          fileOperationsManager.showFolderTreeDialog("copy");
+        } else {
+          showToast("File operations manager not available", "error");
+        }
+        break;
+
       case "delete":
         if (typeof fileManager !== "undefined" && fileManager) {
           fileManager.deleteFile(file.id, isFolder);

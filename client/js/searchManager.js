@@ -20,12 +20,14 @@ class SearchManager {
       </div>
       <div class="filter-container">
         <select id="fileTypeFilter" class="file-type-filter">
-          <option value="all">Tất cả</option>
-          <option value="folder">Thư mục</option>
-          <option value="image">Hình ảnh</option>
-          <option value="document">Tài liệu</option>
-          <option value="video">Video</option>
-          <option value="audio">Âm thanh</option>
+          <option value="all">🗂️ Tất cả</option>
+          <option value="folder">📁 Thư mục</option>
+          <option value="image">🖼️ Hình ảnh</option>
+          <option value="document">📄 Tài liệu</option>
+          <option value="video">🎥 Video</option>
+          <option value="audio">🎵 Âm thanh</option>
+          <option value="archive">📦 File nén</option>
+          <option value="code">💻 Mã nguồn</option>
         </select>
       </div>
     `;
@@ -85,6 +87,9 @@ class SearchManager {
   }
 
   applyFileTypeFilter(type) {
+    // Update filter indicator
+    this.updateFilterIndicator(type);
+
     if (this.isSearchMode) {
       // Apply filter to search results
       const filteredResults = this.filterByType(this.lastSearchResults, type);
@@ -94,6 +99,33 @@ class SearchManager {
       const currentFiles = fileManager.currentFiles || [];
       const filteredFiles = this.filterByType(currentFiles, type);
       this.renderFilteredFiles(filteredFiles, type);
+    }
+  }
+
+  updateFilterIndicator(type) {
+    const filterSelect = document.getElementById("fileTypeFilter");
+    const filterContainer = document.querySelector(".filter-container");
+
+    if (!filterSelect || !filterContainer) return;
+
+    // Remove existing indicator
+    const existingIndicator =
+      filterContainer.querySelector(".filter-indicator");
+    if (existingIndicator) {
+      existingIndicator.remove();
+    }
+
+    // Add new indicator if filter is active
+    if (type && type !== "all") {
+      const indicator = document.createElement("div");
+      indicator.className = "filter-indicator";
+      indicator.innerHTML = `
+        <span class="filter-badge">
+          <span class="mdi mdi-filter"></span>
+          ${this.getFilterDisplayName(type)}
+        </span>
+      `;
+      filterContainer.appendChild(indicator);
     }
   }
 
@@ -156,6 +188,8 @@ class SearchManager {
       document: "Tài liệu",
       video: "Video",
       audio: "Âm thanh",
+      archive: "File nén",
+      code: "Mã nguồn",
     };
     return names[type] || "Tất cả";
   }
@@ -165,6 +199,9 @@ class SearchManager {
     if (fileTypeFilter) {
       fileTypeFilter.value = "all";
     }
+
+    // Clear filter indicator
+    this.updateFilterIndicator("all");
 
     // Return to normal folder view
     fileManager.renderFiles(fileManager.currentFolderId);
@@ -394,21 +431,43 @@ class SearchManager {
         return files.filter(f => f.isFolder);
       case "image":
         return files.filter(
-          f => !f.isFolder && /\.(jpg|jpeg|png|gif|bmp|svg)$/i.test(f.name)
+          f =>
+            !f.isFolder &&
+            /\.(jpg|jpeg|png|gif|bmp|svg|webp|ico|tiff|tif)$/i.test(f.name)
         );
       case "document":
         return files.filter(
           f =>
             !f.isFolder &&
-            /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$/i.test(f.name)
+            /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|rtf|odt|ods|odp)$/i.test(
+              f.name
+            )
         );
       case "video":
         return files.filter(
-          f => !f.isFolder && /\.(mp4|avi|mov|wmv|flv|webm)$/i.test(f.name)
+          f =>
+            !f.isFolder &&
+            /\.(mp4|avi|mov|wmv|flv|webm|mkv|m4v|3gp|ogv)$/i.test(f.name)
         );
       case "audio":
         return files.filter(
-          f => !f.isFolder && /\.(mp3|wav|flac|aac|ogg)$/i.test(f.name)
+          f =>
+            !f.isFolder &&
+            /\.(mp3|wav|flac|aac|ogg|wma|m4a|opus)$/i.test(f.name)
+        );
+      case "archive":
+        return files.filter(
+          f =>
+            !f.isFolder &&
+            /\.(zip|rar|7z|tar|gz|bz2|xz|tar\.gz|tar\.bz2)$/i.test(f.name)
+        );
+      case "code":
+        return files.filter(
+          f =>
+            !f.isFolder &&
+            /\.(js|ts|jsx|tsx|html|css|scss|sass|less|php|py|java|cpp|c|h|cs|rb|go|rs|kt|swift|dart|vue|svelte)$/i.test(
+              f.name
+            )
         );
       default:
         return files;

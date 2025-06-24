@@ -157,6 +157,27 @@
       <span class="context-shortcut">Ctrl+L</span>
     </div>
     <div class="context-menu-separator"></div>
+    <div class="context-menu-item" data-action="cut">
+      <span class="mdi mdi-content-cut"></span>
+      <span>Cắt</span>
+      <span class="context-shortcut">Ctrl+X</span>
+    </div>
+    <div class="context-menu-item" data-action="copy">
+      <span class="mdi mdi-content-copy"></span>
+      <span>Sao chép</span>
+      <span class="context-shortcut">Ctrl+C</span>
+    </div>
+    <div class="context-menu-item" data-action="move">
+      <span class="mdi mdi-folder-move"></span>
+      <span>Di chuyển đến...</span>
+      <span class="context-shortcut">Ctrl+M</span>
+    </div>
+    <div class="context-menu-item" data-action="copy-to">
+      <span class="mdi mdi-folder-plus"></span>
+      <span>Sao chép đến...</span>
+      <span class="context-shortcut">Ctrl+Shift+C</span>
+    </div>
+    <div class="context-menu-separator"></div>
     <div class="context-menu-item context-menu-danger" data-action="delete">
       <span class="mdi mdi-delete"></span>
       <span>Xóa</span>
@@ -188,6 +209,22 @@
       <button class="mobile-action-btn" data-action="copy-link">
         <span class="mdi mdi-link"></span>
         <span>Sao chép link</span>
+      </button>
+      <button class="mobile-action-btn" data-action="cut">
+        <span class="mdi mdi-content-cut"></span>
+        <span>Cắt</span>
+      </button>
+      <button class="mobile-action-btn" data-action="copy">
+        <span class="mdi mdi-content-copy"></span>
+        <span>Sao chép</span>
+      </button>
+      <button class="mobile-action-btn" data-action="move">
+        <span class="mdi mdi-folder-move"></span>
+        <span>Di chuyển đến...</span>
+      </button>
+      <button class="mobile-action-btn" data-action="copy-to">
+        <span class="mdi mdi-folder-plus"></span>
+        <span>Sao chép đến...</span>
       </button>
       <button class="mobile-action-btn" data-action="delete">
         <span class="mdi mdi-delete"></span>
@@ -222,12 +259,15 @@
   <script src="js/contextMenuManager.js"></script>
   <script src="js/keyboardManager.js"></script>
   <script src="js/skeletonManager.js"></script>
+  <script src="js/sortManager.js"></script>
+  <script src="js/paginationManager.js"></script>
   <script src="js/mobileActionManager.js"></script>
+  <script src="js/folderTreeManager.js"></script>
+  <script src="js/fileOperationsManager.js"></script>
   <script src="js/fileManager.js"></script>
   <script src="js/uploadManager.js"></script>
   <script src="js/searchManager.js"></script>
   <script src="js/previewManager.js"></script>
-  <script src="js/sortManager.js"></script>
   <script src="js/multiSelectManager.js"></script>
   <script src="js/app.js"></script>
 </body>

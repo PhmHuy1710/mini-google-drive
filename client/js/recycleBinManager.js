@@ -7,11 +7,46 @@ class RecycleBinManager {
 
   init() {
     this.setupEventListeners();
+
+    // Initialize pagination for recycle bin
+    if (typeof paginationManager !== "undefined" && paginationManager) {
+      // Connect pagination manager to recycleBinManager
+      this.setupPaginationIntegration();
+    }
+
     this.loadTrashedFiles();
 
     // Initialize mobile action manager for recycle bin
     if (typeof mobileActionManager !== "undefined") {
       this.setupMobileActions();
+    }
+  }
+
+  setupPaginationIntegration() {
+    // Override pagination manager's goToPage method for recycle bin
+    if (typeof paginationManager !== "undefined" && paginationManager) {
+      const originalGoToPage =
+        paginationManager.goToPage.bind(paginationManager);
+
+      paginationManager.goToPage = page => {
+        if (window.location.pathname.includes("recycle-bin.html")) {
+          // Handle pagination for recycle bin
+          if (
+            page < 1 ||
+            page > paginationManager.totalPages ||
+            page === paginationManager.currentPage
+          ) {
+            return;
+          }
+
+          const limit = paginationManager.getPageSize();
+          this.loadTrashedFiles(page, limit);
+          showToast(`Chuyển đến trang ${page}`, "info");
+        } else {
+          // Use original implementation for main page
+          originalGoToPage(page);
+        }
+      };
     }
   }
 
@@ -36,7 +71,18 @@ class RecycleBinManager {
     const refreshBtn = document.getElementById("refreshTrashBtn");
     if (refreshBtn) {
       refreshBtn.addEventListener("click", () => {
-        this.loadTrashedFiles();
+        // Use pagination-aware refresh if available
+        if (
+          typeof paginationManager !== "undefined" &&
+          paginationManager &&
+          paginationManager.isActive()
+        ) {
+          const page = paginationManager.getCurrentPage();
+          const limit = paginationManager.getPageSize();
+          this.loadTrashedFiles(page, limit);
+        } else {
+          this.loadTrashedFiles();
+        }
       });
     }
 
@@ -63,7 +109,7 @@ class RecycleBinManager {
     });
   }
 
-  async loadTrashedFiles() {
+  async loadTrashedFiles(page = 1, limit = 50) {
     if (this.isLoading) return;
 
     this.isLoading = true;
@@ -77,13 +123,54 @@ class RecycleBinManager {
     }
 
     try {
-      const response = await fetch("/api/trash");
+      // Try paginated approach first
+      let response, data;
+
+      if (typeof paginationManager !== "undefined" && paginationManager) {
+        // Use pagination parameters
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: limit.toString(),
+        });
+
+        response = await fetch(`/api/trash?${params.toString()}`);
+      } else {
+        // Fallback to simple fetch
+        response = await fetch("/api/trash");
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      this.trashedFiles = await response.json();
+      data = await response.json();
+
+      // Handle both paginated and legacy response format
+      if (data.files && data.pagination) {
+        // Paginated response
+        this.trashedFiles = data.files;
+
+        // Update pagination UI if available
+        if (typeof paginationManager !== "undefined" && paginationManager) {
+          paginationManager.updatePagination(data.pagination);
+        }
+      } else {
+        // Legacy array response
+        this.trashedFiles = Array.isArray(data) ? data : [];
+
+        // Create pagination metadata for UI
+        if (typeof paginationManager !== "undefined" && paginationManager) {
+          const pagination = {
+            totalFiles: this.trashedFiles.length,
+            totalPages: Math.ceil(this.trashedFiles.length / limit),
+            currentPage: page,
+            limit: limit,
+            hasNext: false,
+            hasPrev: false,
+          };
+          paginationManager.updatePagination(pagination);
+        }
+      }
 
       // Hide skeleton before rendering
       if (typeof skeletonManager !== "undefined") {

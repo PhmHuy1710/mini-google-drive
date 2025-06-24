@@ -116,7 +116,32 @@ npm run dev
 npm start
 ```
 
+**Safe Start (Recommended for Windows):**
+```powershell
+# Tự động kiểm tra và kill process đang dùng port 3001
+.\server-start.ps1
+```
+
 Ứng dụng sẽ chạy tại `http://localhost:3001`
+
+### 🛠️ Server Management
+
+Dự án bao gồm script PowerShell `server-start.ps1` để quản lý server an toàn:
+
+**Tính năng:**
+- ✅ Tự động kiểm tra port 3001 có đang được sử dụng
+- ✅ Kill process đang dùng port (nếu có)
+- ✅ Start server một cách an toàn
+- ✅ Error handling với thông báo rõ ràng
+
+**Cách sử dụng:**
+```powershell
+# Chạy script (Windows PowerShell)
+.\server-start.ps1
+
+# Hoặc chạy trực tiếp
+npm start
+```
 
 ## 🚀 Deployment
 
@@ -291,9 +316,13 @@ limits: {
 
 ### 🔄 **Phase 3: Advanced Features (IN PROGRESS)**
 - ✅ Recycle Bin functionality
-- ✅ File type filters
+- ✅ Enhanced file type filters (8 categories với emojis)
 - ✅ Smart breadcrumb navigation
 - ✅ Mobile action menu
+- ✅ Pagination system cho large folders (performance optimization)
+- ✅ Enhanced CSS với modern styling
+- ✅ Server management script
+- ✅ Bug fixes (sortManager.js error trong recycle-bin)
 - ❌ File preview (images, PDFs, videos)
 - ❌ Copy/Move files between folders
 - ❌ Undo/Redo operations
@@ -329,6 +358,12 @@ Mọi contribution đều được chào đón! Vui lòng:
 - **🌙 Dark Mode**: ✅ Available
 - **♿ Accessibility**: ✅ Keyboard Navigation
 - **🔒 Security**: ✅ Production Grade
+
+## 📋 **Project Documentation**
+
+- **🗂️ [Development Plan](plan.md)** - Current progress and roadmap
+- **📝 [Changelog](CHANGELOG.md)** - Detailed change history  
+- **🔍 [Code Audit Report](CODE_AUDIT_REPORT.md)** - Technical analysis
 
 ## 👨‍💻 **Developer**
 

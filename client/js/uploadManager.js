@@ -30,6 +30,13 @@ class UploadManager {
 
   // Check file size before upload
   validateFileSize(file) {
+    // Check for null/undefined file
+    if (!file || typeof file.size === "undefined") {
+      console.error("Invalid file object:", file);
+      showToast("File không hợp lệ!", "error");
+      return false;
+    }
+
     if (file.size > this.maxFileSize) {
       const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
       const limitMB = (this.maxFileSize / (1024 * 1024)).toFixed(0);
@@ -275,6 +282,35 @@ class UploadManager {
 
     ["dragenter", "dragover"].forEach(eventName => {
       window.addEventListener(eventName, e => {
+        // Don't show upload drop area if we're doing internal file operations
+        if (
+          typeof fileOperationsManager !== "undefined" &&
+          fileOperationsManager &&
+          fileOperationsManager.isDragging
+        ) {
+          return;
+        }
+
+        // Only show for external drags (files from outside browser)
+        const items = e.dataTransfer.items;
+        let hasExternalFiles = false;
+
+        if (items && items.length > 0) {
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].kind === "file") {
+              hasExternalFiles = true;
+              break;
+            }
+          }
+        } else {
+          // Fallback: if no items info, assume external
+          hasExternalFiles = true;
+        }
+
+        if (!hasExternalFiles) {
+          return;
+        }
+
         e.preventDefault();
         e.stopPropagation();
         clearTimeout(dragTimeout);
@@ -285,6 +321,15 @@ class UploadManager {
 
     ["dragleave", "drop"].forEach(eventName => {
       window.addEventListener(eventName, e => {
+        // Don't hide upload drop area if it's internal file operations
+        if (
+          typeof fileOperationsManager !== "undefined" &&
+          fileOperationsManager &&
+          fileOperationsManager.isDragging
+        ) {
+          return;
+        }
+
         e.preventDefault();
         e.stopPropagation();
         dragTimeout = setTimeout(() => {
@@ -295,6 +340,15 @@ class UploadManager {
     });
 
     dropArea.addEventListener("drop", e => {
+      // Don't handle drop if it's internal file operations
+      if (
+        typeof fileOperationsManager !== "undefined" &&
+        fileOperationsManager &&
+        fileOperationsManager.isDragging
+      ) {
+        return;
+      }
+
       e.preventDefault();
       dropArea.style.display = "none";
       dropArea.classList.remove("drop-area-show");

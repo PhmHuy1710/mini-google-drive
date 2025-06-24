@@ -74,7 +74,7 @@ class PreviewManager {
           fileManager.downloadFile(this.currentFile.id, this.currentFile.name);
         } else {
           // Fallback
-          window.open(`/api/download/${this.currentFile.id}`, "_blank");
+        window.open(`/api/download/${this.currentFile.id}`, "_blank");
         }
       }
     });
@@ -390,3 +390,4 @@ class PreviewManager {
 
 // Export instance
 const previewManager = new PreviewManager();
+ 

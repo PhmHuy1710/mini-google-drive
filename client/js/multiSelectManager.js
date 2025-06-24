@@ -425,6 +425,25 @@ class MultiSelectManager {
   hasSelectedFiles() {
     return this.selectedFiles.size > 0;
   }
+
+  // Select a specific file (used by context menu operations)
+  selectFile(fileId) {
+    this.selectedFiles.add(fileId);
+
+    // Update checkbox if it exists
+    const checkbox = document.querySelector(`input[data-file-id="${fileId}"]`);
+    if (checkbox) {
+      checkbox.checked = true;
+    }
+
+    this.updateSelectAllState();
+    this.updateSelectionUI();
+  }
+
+  // Alias for legacy compatibility
+  deselectAll() {
+    this.clearSelection();
+  }
 }
 
 // Export instance

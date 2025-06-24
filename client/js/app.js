@@ -247,7 +247,7 @@ class App {
             fileManager.downloadFile(fileId, fileName);
           } else {
             // Fallback
-            window.open(`/api/download/${fileId}`, "_blank");
+          window.open(`/api/download/${fileId}`, "_blank");
           }
         } else if (button.classList.contains("btn-rename")) {
           // Rename file
@@ -336,8 +336,18 @@ class App {
         // Refresh search results (skeleton handled in searchManager)
         await searchManager.performSearch(searchManager.searchTerm);
       } else {
-        // Refresh current folder (skeleton handled in fileManager)
-        await fileManager.renderFiles(fileManager.currentFolderId);
+        // Refresh current folder with pagination support
+        if (
+          typeof paginationManager !== "undefined" &&
+          paginationManager &&
+          paginationManager.isActive()
+        ) {
+          const page = paginationManager.getCurrentPage();
+          const limit = paginationManager.getPageSize();
+          await fileManager.loadFilesWithPagination(page, limit);
+        } else {
+          await fileManager.openFolder(fileManager.currentFolderId, false);
+        }
       }
 
       // Refresh storage info

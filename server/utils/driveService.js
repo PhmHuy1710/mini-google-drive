@@ -485,10 +485,12 @@ class DriveService {
     }
   }
 
-  // Get all trashed files
-  async getTrashedFiles() {
+  // Get all trashed files with pagination support
+  async getTrashedFiles(paginationOptions = {}) {
     try {
       console.log("🗑️ Getting trashed files from Google Drive...");
+
+      const { page = 1, limit = 100 } = paginationOptions;
 
       // Try different approaches to get trashed files
       const queries = ["trashed=true", "trashed = true", "trashed:true"];
@@ -500,7 +502,7 @@ class DriveService {
           const result = await this.drive.files.list({
             q: queries[i],
             fields: "files(id, name, modifiedTime, size, mimeType, parents)",
-            pageSize: 100,
+            pageSize: 1000, // Fetch all to handle pagination client-side
             includeItemsFromAllDrives: false,
             supportsAllDrives: false,
           });
@@ -511,7 +513,7 @@ class DriveService {
             } trashed files`
           );
 
-          const files = (result.data.files || []).map(f => {
+          const allFiles = (result.data.files || []).map(f => {
             const isFolder =
               f.mimeType === "application/vnd.google-apps.folder";
             return {
@@ -522,7 +524,32 @@ class DriveService {
             };
           });
 
-          return files;
+          // Apply pagination if requested
+          if (Object.keys(paginationOptions).length > 0) {
+            const totalFiles = allFiles.length;
+            const totalPages = Math.ceil(totalFiles / limit);
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+
+            const paginatedFiles = allFiles.slice(startIndex, endIndex);
+
+            return {
+              files: paginatedFiles,
+              pagination: {
+                totalFiles,
+                totalPages,
+                currentPage: page,
+                limit,
+                hasNext: page < totalPages,
+                hasPrev: page > 1,
+                startIndex: startIndex + 1,
+                endIndex: Math.min(endIndex, totalFiles),
+              },
+            };
+          }
+
+          // Return all files for legacy compatibility
+          return allFiles;
         } catch (queryError) {
           console.log(`❌ Query ${i + 1} failed:`, queryError.message);
           if (i === queries.length - 1) {
@@ -534,9 +561,27 @@ class DriveService {
     } catch (error) {
       console.error("❌ All trashed file queries failed:", error.message);
 
-      // Return empty array as fallback instead of throwing
-      console.log("🔄 Returning empty array as fallback");
-      return [];
+      // Return empty result as fallback instead of throwing
+      console.log("🔄 Returning empty result as fallback");
+      const emptyResult = [];
+
+      if (Object.keys(paginationOptions).length > 0) {
+        return {
+          files: emptyResult,
+          pagination: {
+            totalFiles: 0,
+            totalPages: 0,
+            currentPage: 1,
+            limit: limit,
+            hasNext: false,
+            hasPrev: false,
+            startIndex: 0,
+            endIndex: 0,
+          },
+        };
+      }
+
+      return emptyResult;
     }
   }
 
@@ -666,6 +711,220 @@ class DriveService {
       console.error("Error searching files:", error);
       throw error;
     }
+  }
+
+  // Move files to different folder
+  async moveFiles(fileIds, targetFolderId) {
+    try {
+      console.log(
+        `📁 Moving ${fileIds.length} files to folder: ${targetFolderId}`
+      );
+
+      const results = [];
+
+      for (const fileId of fileIds) {
+        try {
+          // Get current file info
+          const fileInfo = await this.drive.files.get({
+            fileId,
+            fields: "id, name, parents",
+          });
+
+          const currentParents = fileInfo.data.parents || [];
+
+          // Move file by adding to new parent and removing from old parents
+          await this.drive.files.update({
+            fileId,
+            addParents: targetFolderId,
+            removeParents: currentParents.join(","),
+            fields: "id, name, parents",
+          });
+
+          console.log(`✅ Moved file: ${fileInfo.data.name}`);
+          results.push({
+            id: fileId,
+            name: fileInfo.data.name,
+            success: true,
+          });
+        } catch (error) {
+          console.error(`❌ Failed to move file ${fileId}:`, error.message);
+          results.push({
+            id: fileId,
+            success: false,
+            error: error.message,
+          });
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error("Error moving files:", error);
+      throw error;
+    }
+  }
+
+  // Copy files to different folder
+  async copyFiles(fileIds, targetFolderId) {
+    try {
+      console.log(
+        `📁 Copying ${fileIds.length} files to folder: ${targetFolderId}`
+      );
+
+      const results = [];
+
+      for (const fileId of fileIds) {
+        try {
+          // Get current file info
+          const fileInfo = await this.drive.files.get({
+            fileId,
+            fields: "id, name, mimeType",
+          });
+
+          const isFolder =
+            fileInfo.data.mimeType === "application/vnd.google-apps.folder";
+
+          if (isFolder) {
+            // For folders, create a new folder and recursively copy contents
+            const copiedFolder = await this.copyFolder(fileId, targetFolderId);
+            results.push(copiedFolder);
+          } else {
+            // For files, use Google Drive copy API
+            const copiedFile = await this.drive.files.copy({
+              fileId,
+              resource: {
+                name: `Copy of ${fileInfo.data.name}`,
+                parents: [targetFolderId],
+              },
+              fields: "id, name",
+            });
+
+            console.log(`✅ Copied file: ${fileInfo.data.name}`);
+            results.push({
+              id: copiedFile.data.id,
+              name: copiedFile.data.name,
+              originalId: fileId,
+              success: true,
+            });
+          }
+        } catch (error) {
+          console.error(`❌ Failed to copy file ${fileId}:`, error.message);
+          results.push({
+            id: fileId,
+            success: false,
+            error: error.message,
+          });
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error("Error copying files:", error);
+      throw error;
+    }
+  }
+
+  // Helper method to copy folders recursively
+  async copyFolder(folderId, targetFolderId) {
+    try {
+      // Get folder info
+      const folderInfo = await this.drive.files.get({
+        fileId: folderId,
+        fields: "id, name",
+      });
+
+      // Create new folder
+      const newFolder = await this.createFolder(
+        `Copy of ${folderInfo.data.name}`,
+        targetFolderId
+      );
+
+      // Get all files in the original folder
+      const files = await this.listFiles(folderId);
+      const fileList = Array.isArray(files) ? files : files.files || [];
+
+      // Recursively copy all files in the folder
+      for (const file of fileList) {
+        if (file.isFolder) {
+          await this.copyFolder(file.id, newFolder.id);
+        } else {
+          await this.drive.files.copy({
+            fileId: file.id,
+            resource: {
+              name: file.name,
+              parents: [newFolder.id],
+            },
+          });
+        }
+      }
+
+      console.log(`✅ Copied folder: ${folderInfo.data.name}`);
+      return {
+        id: newFolder.id,
+        name: newFolder.name,
+        originalId: folderId,
+        success: true,
+      };
+    } catch (error) {
+      console.error("Error copying folder:", error);
+      throw error;
+    }
+  }
+
+  // Get folder tree structure for navigation
+  async getFolderTree() {
+    try {
+      console.log("🌳 Building folder tree structure...");
+
+      const rootId = await this.ensureUploadRoot();
+
+      // Get all folders
+      const result = await this.drive.files.list({
+        q: "mimeType='application/vnd.google-apps.folder' and trashed=false",
+        fields: "files(id, name, parents)",
+        pageSize: 1000,
+      });
+
+      const folders = result.data.files || [];
+
+      // Build tree structure
+      const tree = this.buildFolderTree(folders, rootId);
+
+      console.log(`✅ Built folder tree with ${folders.length} folders`);
+      return tree;
+    } catch (error) {
+      console.error("Error getting folder tree:", error);
+      throw error;
+    }
+  }
+
+  // Helper method to build folder tree structure
+  buildFolderTree(folders, rootId, parentId = null) {
+    const tree = [];
+
+    const targetParentId = parentId || rootId;
+
+    // Find folders that belong to this parent
+    const childFolders = folders.filter(folder => {
+      const folderParent = folder.parents && folder.parents[0];
+      return folderParent === targetParentId;
+    });
+
+    // Sort folders alphabetically
+    childFolders.sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", "vi")
+    );
+
+    for (const folder of childFolders) {
+      const folderNode = {
+        id: folder.id,
+        name: folder.name,
+        children: this.buildFolderTree(folders, rootId, folder.id),
+      };
+
+      tree.push(folderNode);
+    }
+
+    return tree;
   }
 }
 

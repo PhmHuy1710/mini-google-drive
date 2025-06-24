@@ -360,23 +360,156 @@ router.get(
   }
 );
 
-// ===== RECYCLE BIN ROUTES =====
+// ===== FILE OPERATIONS ROUTES =====
 
-// GET /api/trash - Get all trashed files
-router.get("/trash", async (req, res) => {
+// POST /api/move - Move file(s) to different folder
+router.post(
+  "/move",
+  [
+    body("fileIds")
+      .isArray({ min: 1 })
+      .withMessage("At least one file ID is required"),
+    body("fileIds.*")
+      .isString()
+      .trim()
+      .notEmpty()
+      .withMessage("Each file ID must be a non-empty string"),
+    body("targetFolderId")
+      .isString()
+      .trim()
+      .notEmpty()
+      .withMessage("Target folder ID is required"),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { fileIds, targetFolderId } = req.body;
+      console.log(
+        `📁 Moving ${fileIds.length} files to folder: ${targetFolderId}`
+      );
+
+      const results = await driveService.moveFiles(fileIds, targetFolderId);
+      res.json({
+        success: true,
+        moved: results.length,
+        results: results,
+      });
+    } catch (error) {
+      console.error("Move files error:", error);
+      res.status(500).json({
+        error: "Failed to move files",
+        detail: error.message,
+      });
+    }
+  }
+);
+
+// POST /api/copy - Copy file(s) to different folder
+router.post(
+  "/copy",
+  [
+    body("fileIds")
+      .isArray({ min: 1 })
+      .withMessage("At least one file ID is required"),
+    body("fileIds.*")
+      .isString()
+      .trim()
+      .notEmpty()
+      .withMessage("Each file ID must be a non-empty string"),
+    body("targetFolderId")
+      .isString()
+      .trim()
+      .notEmpty()
+      .withMessage("Target folder ID is required"),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { fileIds, targetFolderId } = req.body;
+      console.log(
+        `📁 Copying ${fileIds.length} files to folder: ${targetFolderId}`
+      );
+
+      const results = await driveService.copyFiles(fileIds, targetFolderId);
+      res.json({
+        success: true,
+        copied: results.length,
+        results: results,
+      });
+    } catch (error) {
+      console.error("Copy files error:", error);
+      res.status(500).json({
+        error: "Failed to copy files",
+        detail: error.message,
+      });
+    }
+  }
+);
+
+// GET /api/folder-tree - Get folder tree structure for navigation
+router.get("/folder-tree", async (req, res) => {
   try {
-    const trashedFiles = await driveService.getTrashedFiles();
-
-    // Ensure UTF-8 encoding for response
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.json(trashedFiles);
+    const tree = await driveService.getFolderTree();
+    res.json(tree);
   } catch (error) {
+    console.error("Get folder tree error:", error);
     res.status(500).json({
-      error: "Failed to get trashed files",
+      error: "Failed to get folder tree",
       detail: error.message,
     });
   }
 });
+
+// ===== RECYCLE BIN ROUTES =====
+
+// GET /api/trash - Get all trashed files with pagination support
+router.get(
+  "/trash",
+  [
+    query("page")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("Page must be a positive integer"),
+    query("limit")
+      .optional()
+      .isInt({ min: 1, max: 1000 })
+      .withMessage("Limit must be between 1 and 1000"),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const {
+        page = 1,
+        limit = 100, // Default to 100 files per page
+      } = req.query;
+
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+
+      const result = await driveService.getTrashedFiles({
+        page: pageNum,
+        limit: limitNum,
+      });
+
+      // Ensure UTF-8 encoding for response
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+
+      // Check if client expects paginated response or legacy format
+      if (req.query.page !== undefined || req.query.limit !== undefined) {
+        // Return paginated response
+        res.json(result);
+      } else {
+        // Return legacy format for backward compatibility
+        res.json(result.files || result);
+      }
+    } catch (error) {
+      res.status(500).json({
+        error: "Failed to get trashed files",
+        detail: error.message,
+      });
+    }
+  }
+);
 
 // POST /api/restore/:id - Restore file from trash
 router.post(

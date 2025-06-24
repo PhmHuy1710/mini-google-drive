@@ -11,6 +11,11 @@ class SortManager {
   setupSortControls() {
     // Add sort controls to toolbar
     const toolbar = document.querySelector(".toolbar");
+    if (!toolbar) {
+      console.warn("SortManager: No toolbar found");
+      return;
+    }
+
     const sortContainer = document.createElement("div");
     sortContainer.className = "sort-container";
     sortContainer.innerHTML = `
@@ -18,7 +23,6 @@ class SortManager {
         <button class="btn-sort" id="sortToggle">
           <span class="mdi mdi-sort" id="sortIcon"></span>
           <span id="sortLabel">Sắp xếp</span>
-          <span class="mdi mdi-chevron-down"></span>
         </button>
         <div class="sort-menu" id="sortMenu">
           <div class="sort-option" data-field="name" data-direction="asc">
@@ -60,17 +64,43 @@ class SortManager {
       </div>
     `;
 
-    // Insert after search container
+    // Smart positioning based on page type and available elements
+    let inserted = false;
+
+    // Try to insert after search container (main page)
     const searchContainer = toolbar.querySelector(".search-container");
-    if (searchContainer) {
+    if (searchContainer && searchContainer.parentNode) {
       searchContainer.parentNode.insertBefore(
         sortContainer,
         searchContainer.nextSibling
       );
-    } else {
-      // Fallback: insert after create folder button
+      inserted = true;
+    }
+
+    // Try to insert after create folder button (main page fallback)
+    if (!inserted) {
       const createBtn = toolbar.querySelector(".btn-create");
-      createBtn.parentNode.insertBefore(sortContainer, createBtn.nextSibling);
+      if (createBtn && createBtn.parentNode) {
+        createBtn.parentNode.insertBefore(sortContainer, createBtn.nextSibling);
+        inserted = true;
+      }
+    }
+
+    // Try to insert after refresh button (recycle-bin page)
+    if (!inserted) {
+      const refreshBtn = toolbar.querySelector(".btn-refresh");
+      if (refreshBtn && refreshBtn.parentNode) {
+        refreshBtn.parentNode.insertBefore(
+          sortContainer,
+          refreshBtn.nextSibling
+        );
+        inserted = true;
+      }
+    }
+
+    // Last resort: append to toolbar
+    if (!inserted) {
+      toolbar.appendChild(sortContainer);
     }
 
     this.setupSortEvents();
@@ -270,6 +300,19 @@ class SortManager {
     }
   }
 
+  // Get current sort state (for pagination integration)
+  getCurrentSort() {
+    return {
+      column: this.currentSort.field,
+      direction: this.currentSort.direction,
+    };
+  }
+
+  // Get raw sort state
+  getSortState() {
+    return { ...this.currentSort };
+  }
+
   // Quick sort methods
   sortByName(ascending = true) {
     this.changeSort("name", ascending ? "asc" : "desc");
@@ -286,4 +329,3 @@ class SortManager {
 
 // Export instance
 const sortManager = new SortManager();
- 
