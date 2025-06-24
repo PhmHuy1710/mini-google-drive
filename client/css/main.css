@@ -263,41 +263,9 @@ body {
   transition: color 0.3s ease;
 }
 
-.file-grid-actions {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
 
-.file-grid-item:hover .file-grid-actions {
-  opacity: 1;
-}
 
-.file-grid-action {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: 6px;
-  padding: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-}
 
-.file-grid-action:hover {
-  background: var(--bg-hover);
-  color: var(--text-accent);
-  border-color: var(--border-accent);
-}
 
 /* Grid responsive breakpoints */
 @media (max-width: 768px) {
@@ -3654,19 +3622,7 @@ body {
     transition: transform 0.1s ease;
   }
 
-  .file-grid-actions {
-    top: 12px;
-    right: 12px;
-    gap: 8px;
-  }
 
-  .file-grid-action {
-    min-width: 44px;
-    min-height: 44px;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 18px;
-  }
 
   /* Table row touch improvements */
   .file-list tr {

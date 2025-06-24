@@ -286,3 +286,4 @@ function queueUploadForBackgroundSync(uploadData) {
 }
 
 console.log("🚀 Mini Google Drive Service Worker v2.3.0 loaded");
+ 

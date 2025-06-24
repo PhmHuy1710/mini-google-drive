@@ -243,39 +243,6 @@ class App {
         window.location.href = "recycle-bin.html";
       });
     }
-
-    // Event delegation for grid view actions
-    document.addEventListener("click", e => {
-      // Handle grid action buttons
-      if (e.target.closest(".file-grid-action")) {
-        const button = e.target.closest(".file-grid-action");
-        const fileId = button.getAttribute("data-file-id");
-        const fileName = button.getAttribute("data-file-name");
-        const isFolder = button.getAttribute("data-is-folder") === "true";
-
-        if (button.classList.contains("btn-preview")) {
-          // Preview file
-          const file = fileManager.currentFiles?.find(f => f.id === fileId);
-          if (file) {
-            previewManager.previewFile(file, fileManager.currentFiles || []);
-          }
-        } else if (button.classList.contains("btn-download")) {
-          // Download file
-          if (typeof fileManager !== "undefined" && fileManager) {
-            fileManager.downloadFile(fileId, fileName);
-          } else {
-            // Fallback
-            window.open(`/api/download/${fileId}`, "_blank");
-          }
-        } else if (button.classList.contains("btn-rename")) {
-          // Rename file
-          fileManager.renameFile(fileId, fileName);
-        } else if (button.classList.contains("btn-delete")) {
-          // Delete file
-          fileManager.deleteFile(fileId, isFolder);
-        }
-      }
-    });
   }
 
   handleKeyboard(e) {

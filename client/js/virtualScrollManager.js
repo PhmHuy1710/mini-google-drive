@@ -351,17 +351,6 @@ class VirtualScrollManager {
         <div class="file-grid-meta">${
           file.size ? formatSize(file.size) : ""
         }</div>
-        <div class="file-grid-actions">
-          <button class="file-grid-action btn-preview mdi mdi-eye" data-file-id="${
-            file.id
-          }" data-file-name="${file.name}"></button>
-          <button class="file-grid-action btn-download mdi mdi-download" data-file-id="${
-            file.id
-          }" data-file-name="${file.name}"></button>
-          <button class="file-grid-action btn-delete mdi mdi-delete" data-file-id="${
-            file.id
-          }" data-is-folder="${file.isFolder}"></button>
-        </div>
       </div>
     `;
   }

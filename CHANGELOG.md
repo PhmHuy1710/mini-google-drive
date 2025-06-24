@@ -1,6 +1,36 @@
 # 📝 Mini Google Drive - Changelog
 
-## 🗓️ Version 2.4.2 - January 2, 2025 - Critical Bug Fixes
+## 🗓️ Version 2.4.3 - 24/06/2025 - Code Optimization & Cleanup
+
+### 🔧 **Code Optimization**
+- **Removed File Grid Actions**: Loại bỏ file-grid-actions buttons vì đã có context menu system
+- **Enhanced Context Menu Integration**: Grid view giờ hoàn toàn sử dụng context menu thay vì inline action buttons
+- **Simplified Grid View**: Grid items giờ sạch sẽ hơn với focus vào nội dung thay vì buttons
+- **Improved Code Structure**: Loại bỏ duplicate code và simplify event handling
+
+### 🎯 **User Experience Improvements**
+- **Consistent Interaction Pattern**: Tất cả file operations giờ thống nhất thông qua context menu
+- **Cleaner Grid View**: Grid items có thiết kế tối giản và thẩm mỹ hơn
+- **Better Touch Support**: Context menu hoạt động tốt trên cả mobile và desktop
+- **Simplified Interface**: Ít visual clutter, tập trung vào nội dung
+
+### 📊 **Project Status Update**
+- **Modular JavaScript**: Hoàn thành với 21 modules
+- **Context Menu System**: Hoàn chỉnh với full keyboard shortcuts
+- **PWA Support**: Service Worker, offline functionality, app installation
+- **Virtual Scrolling**: Tối ưu cho danh sách file lớn (500+ files)
+- **Lazy Loading**: Thumbnail loading thông minh
+- **Mobile Responsive**: 100% mobile-first design
+
+### 🧹 **Cleanup Tasks Completed**
+- Loại bỏ CSS không sử dụng cho file-grid-actions
+- Cleanup JavaScript event handlers redundant
+- Optimize code structure và performance
+- Cập nhật documentation để phản ánh tình trạng hiện tại
+
+---
+
+## 🗓️ Version 2.4.2 - 24/06/2025 - Critical Bug Fixes
 
 ### 🐛 **Critical Fixes**
 - **Fixed CSP Violation**: Resolved "Refused to load the image 'blob:' because it violates CSP directive" error
@@ -20,7 +50,7 @@
 
 ---
 
-## 🗓️ Version 2.4.1 - January 2, 2025 - Bug Fix Release
+## 🗓️ Version 2.4.1 - 24/06/2025 - Bug Fix Release
 
 ### 🐛 **Critical Bug Fixes**
 - **Fixed LazyLoadManager.observeElement Error**: Resolved `window.lazyLoadManager.observeElement is not a function` error
@@ -42,7 +72,7 @@
 
 ---
 
-## 🗓️ Version 2.4.0 - January 2, 2025 - Virtual Scrolling & Phase 3 Completion
+## 🗓️ Version 2.4.0 - 23/06/2025 - Virtual Scrolling & Phase 3 Completion
 
 ### ✨ **NEW Features**
 - **🚀 Virtual Scrolling Implementation**
@@ -76,7 +106,7 @@
 
 ---
 
-## 🗓️ Version 2.3.1 - January 2, 2025
+## 🗓️ Version 2.3.1 - 22/06/2025
 
 ### 🛠️ **Bug Fixes & Optimizations**
 - **Fixed Service Worker CSP Issues**: Resolved Content Security Policy violations causing PWA functionality failures
@@ -106,7 +136,7 @@
 - Added offline.html page for PWA offline functionality
 - Improved error handling in Service Worker
 
-## 🗓️ Version 2.3.0 - January 2, 2025
+## 🗓️ Version 2.3.0 - 21/06/2025
 
 ### ✨ **Breadcrumb Navigation Enhancement**
 - **Modern CSS redesign** for breadcrumb navigation with improved visual hierarchy
@@ -174,7 +204,7 @@
 
 ---
 
-## 🗓️ Version 2.2.0 - December 31, 2024
+## 🗓️ Version 2.2.0 - 20/06/2025
 
 ### ✅ **Major Improvements**
 - **Fixed sortManager.js error** in recycle-bin.html with smart positioning logic
@@ -196,7 +226,7 @@
 
 ---
 
-## 🗓️ Version 2.1.0 - December 2024
+## 🗓️ Version 2.1.0 - 18/06/2025
 
 ### ✅ **Phase 2 Completion**
 - **Folder Download as ZIP** - Complete server-side implementation
@@ -218,7 +248,7 @@
 
 ---
 
-## 🗓️ Version 2.0.0 - December 2024
+## 🗓️ Version 2.0.0 - 15/06/2025
 
 ### 🚀 **Phase 1 & 2 Major Release**
 
@@ -292,13 +322,13 @@
 
 ## 🐛 **Bug Fixes & Optimizations**
 
-### **December 31, 2024:**
+### **10/06/2025:**
 - Fixed sortManager.js null pointer error in recycle-bin
 - Resolved multiple dropdown arrows in filters
 - Improved CSS specificity for dark/light themes
 - Enhanced mobile touch targets (44px minimum)
 
-### **December 2024:**
+### **06/06/2025:**
 - Fixed skeleton loading duplicate tables issue
 - Resolved dialog system inconsistencies
 - Improved UTF-8 filename encoding

@@ -38,7 +38,7 @@ mini-google-drive/
 ├── client/                    # Frontend Application
 │   ├── css/
 │   │   └── main.css          # Main stylesheet với dark/light theme
-│   ├── js/                   # Modular JavaScript (16 modules)
+│   ├── js/                   # Modular JavaScript (21 modules)
 │   │   ├── app.js            # Main application entry
 │   │   ├── fileManager.js    # File operations
 │   │   ├── uploadManager.js  # Upload handling
@@ -228,7 +228,7 @@ npm start
 ## 🛠️ Tech Stack
 
 ### **Frontend**
-- **Vanilla JavaScript ES6+** - 16 modular components
+- **Vanilla JavaScript ES6+** - 21 modular components
 - **CSS3** - Custom properties, flexbox, grid
 - **HTML5** - Semantic markup
 - **Material Design Icons** - Icon system
@@ -330,6 +330,7 @@ limits: {
 - ✅ Lazy Loading thumbnails với hiệu suất cao
 - ✅ PWA Support (Service Worker, Offline functionality, App Installation)
 - ✅ Move files between folders với drag & drop
+- ✅ Code Optimization & Cleanup (Context menu integration, removed redundant grid actions)
 
 ### 🚀 **Phase 4: Future Enhancements**
 - [ ] PWA support (offline functionality)
@@ -355,8 +356,8 @@ Mọi contribution đều được chào đón! Vui lòng:
 
 ## 📊 **Project Stats**
 
-- **🌟 Version**: 2.4.2 (Critical Bug Fixes)
-- **📅 Last Updated**: January 2, 2025
+- **🌟 Version**: 2.4.3
+- **📅 Last Updated**: 24/06/2025
 - **🚀 Live Demo**: [mini-google-drive.vercel.app](https://mini-google-drive.vercel.app)
 - **📱 Mobile Support**: ✅ Fully Responsive
 - **🌙 Dark Mode**: ✅ Available
@@ -369,7 +370,6 @@ Mọi contribution đều được chào đón! Vui lòng:
 
 - **🗂️ [Development Plan](plan.md)** - Current progress and roadmap
 - **📝 [Changelog](CHANGELOG.md)** - Detailed change history  
-- **🔍 [Code Audit Report](CODE_AUDIT_REPORT.md)** - Technical analysis
 
 ## 👨‍💻 **Developer**
 
