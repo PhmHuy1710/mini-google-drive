@@ -1,5 +1,47 @@
 # 📝 Mini Google Drive - Changelog
 
+## 🗓️ Version 2.4.2 - January 2, 2025 - Critical Bug Fixes
+
+### 🐛 **Critical Fixes**
+- **Fixed CSP Violation**: Resolved "Refused to load the image 'blob:' because it violates CSP directive" error
+- **Fixed Pagination Overlay**: Fixed pagination container appearing over grid view
+- **Grid View Stability**: Enhanced grid view reliability and performance
+
+### 🔧 **Technical Improvements**
+- **CSP-Safe Image Loading**: Replaced blob URLs with direct image loading to comply with Content Security Policy
+- **Smart Pagination Management**: Pagination now automatically hides in grid view and shows in list view
+- **Enhanced View Manager**: Added `updatePaginationVisibility()` method for better view state management
+- **Improved Error Handling**: Better fallback mechanisms for thumbnail loading failures
+
+### 🎯 **User Experience**
+- **Seamless View Switching**: Smoother transitions between list and grid views
+- **Consistent UI**: Pagination no longer overlaps content in grid view
+- **Better Performance**: Optimized image loading reduces memory usage and improves responsiveness
+
+---
+
+## 🗓️ Version 2.4.1 - January 2, 2025 - Bug Fix Release
+
+### 🐛 **Critical Bug Fixes**
+- **Fixed LazyLoadManager.observeElement Error**: Resolved `window.lazyLoadManager.observeElement is not a function` error
+- **Grid View Stability**: Fixed lazy loading initialization in grid view mode
+- **Browser Cache Issues**: Added version numbers to script tags to force browser cache refresh
+- **Error Handling**: Enhanced error handling in viewManager.js with try-catch wrapper
+
+### 🛠️ **Technical Improvements**
+- Added proper function existence checks before calling LazyLoadManager methods
+- Implemented cache-busting mechanism with version parameters (?v=2.4.1)
+- Enhanced debugging with version logging for better troubleshooting
+- Improved fallback mechanisms when LazyLoadManager is unavailable
+
+### 📋 **Files Updated**
+- `client/index.html` - Added cache-busting version parameters
+- `client/recycle-bin.html` - Added cache-busting version parameters
+- `client/js/viewManager.js` - Enhanced error handling and method validation
+- `client/js/app.js` - Added version logging for debugging
+
+---
+
 ## 🗓️ Version 2.4.0 - January 2, 2025 - Virtual Scrolling & Phase 3 Completion
 
 ### ✨ **NEW Features**

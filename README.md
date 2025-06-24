@@ -1,4 +1,4 @@
-# Mini Google Drive 2.0
+# Mini Google Drive 2.4.3
 
 🌐 **Live Demo**: [https://mini-google-drive.vercel.app](https://mini-google-drive.vercel.app)
 
@@ -355,7 +355,7 @@ Mọi contribution đều được chào đón! Vui lòng:
 
 ## 📊 **Project Stats**
 
-- **🌟 Version**: 2.4.0 (Production Ready)
+- **🌟 Version**: 2.4.2 (Critical Bug Fixes)
 - **📅 Last Updated**: January 2, 2025
 - **🚀 Live Demo**: [mini-google-drive.vercel.app](https://mini-google-drive.vercel.app)
 - **📱 Mobile Support**: ✅ Fully Responsive

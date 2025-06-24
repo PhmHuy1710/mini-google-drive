@@ -8,53 +8,74 @@ class PreviewManager {
   setupModal() {
     // Create preview modal if it doesn't exist
     if (!document.getElementById("previewModal")) {
-      const modal = document.createElement("div");
-      modal.className = "modal-bg preview-modal";
-      modal.id = "previewModal";
-      modal.style.display = "none"; // Ensure it's hidden initially
-      modal.innerHTML = `
-        <div class="preview-modal-content">
-          <div class="preview-header">
-            <h3 class="preview-title" id="previewTitle">File Preview</h3>
-            <div class="preview-actions">
-              <button class="btn-preview-action" id="downloadFromPreview" title="Tải về">
-                <span class="mdi mdi-download"></span>
-              </button>
-              <button class="btn-preview-action" id="shareFromPreview" title="Chia sẻ">
-                <span class="mdi mdi-share-variant"></span>
-              </button>
-              <button class="btn-preview-close" id="closePreview" title="Đóng">
-                <span class="mdi mdi-close"></span>
-              </button>
+      try {
+        const modal = document.createElement("div");
+        modal.className = "modal-bg preview-modal";
+        modal.id = "previewModal";
+        modal.style.display = "none"; // Ensure it's hidden initially
+        modal.innerHTML = `
+          <div class="preview-modal-content">
+            <div class="preview-header">
+              <h3 class="preview-title" id="previewTitle">File Preview</h3>
+              <div class="preview-actions">
+                <button class="btn-preview-action" id="downloadFromPreview" title="Tải về">
+                  <span class="mdi mdi-download"></span>
+                </button>
+                <button class="btn-preview-action" id="shareFromPreview" title="Chia sẻ">
+                  <span class="mdi mdi-share-variant"></span>
+                </button>
+                <button class="btn-preview-close" id="closePreview" title="Đóng">
+                  <span class="mdi mdi-close"></span>
+                </button>
+              </div>
+            </div>
+            <div class="preview-body" id="previewBody">
+              <div class="preview-loading">
+                <span class="mdi mdi-loading mdi-spin"></span>
+                <span>Đang tải...</span>
+              </div>
+            </div>
+            <div class="preview-footer">
+              <div class="preview-info" id="previewInfo"></div>
+              <div class="preview-controls">
+                <button class="btn-preview-nav" id="prevFileBtn" title="File trước">
+                  <span class="mdi mdi-chevron-left"></span>
+                </button>
+                <button class="btn-preview-nav" id="nextFileBtn" title="File sau">
+                  <span class="mdi mdi-chevron-right"></span>
+                </button>
+              </div>
             </div>
           </div>
-          <div class="preview-body" id="previewBody">
-            <div class="preview-loading">
-              <span class="mdi mdi-loading mdi-spin"></span>
-              <span>Đang tải...</span>
-            </div>
-          </div>
-          <div class="preview-footer">
-            <div class="preview-info" id="previewInfo"></div>
-            <div class="preview-controls">
-              <button class="btn-preview-nav" id="prevFileBtn" title="File trước">
-                <span class="mdi mdi-chevron-left"></span>
-              </button>
-              <button class="btn-preview-nav" id="nextFileBtn" title="File sau">
-                <span class="mdi mdi-chevron-right"></span>
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
+        `;
 
-      this.setupEventListeners();
+        // Ensure document.body exists before appending
+        if (document.body) {
+          document.body.appendChild(modal);
+          console.log("✅ Preview modal created successfully");
+        } else {
+          console.error(
+            "❌ Cannot create preview modal: document.body not available"
+          );
+          return;
+        }
+
+        this.setupEventListeners();
+      } catch (error) {
+        console.error("❌ Error creating preview modal:", error);
+      }
     }
   }
 
   setupEventListeners() {
     const modal = document.getElementById("previewModal");
+
+    // Safety check - if modal doesn't exist, don't set up event listeners
+    if (!modal) {
+      console.warn("⚠️ Cannot setup preview event listeners: modal not found");
+      return;
+    }
+
     const closeBtn = document.getElementById("closePreview");
     const downloadBtn = document.getElementById("downloadFromPreview");
     const shareBtn = document.getElementById("shareFromPreview");
@@ -63,7 +84,7 @@ class PreviewManager {
 
     // Close modal
     closeBtn?.addEventListener("click", () => this.closePreview());
-    modal?.addEventListener("click", e => {
+    modal.addEventListener("click", e => {
       if (e.target === modal) this.closePreview();
     });
 
@@ -74,7 +95,7 @@ class PreviewManager {
           fileManager.downloadFile(this.currentFile.id, this.currentFile.name);
         } else {
           // Fallback
-        window.open(`/api/download/${this.currentFile.id}`, "_blank");
+          window.open(`/api/download/${this.currentFile.id}`, "_blank");
         }
       }
     });
@@ -115,10 +136,31 @@ class PreviewManager {
     this.fileList = fileList;
     this.currentIndex = fileList.findIndex(f => f.id === file.id);
 
-    const modal = document.getElementById("previewModal");
+    // Ensure modal exists
+    let modal = document.getElementById("previewModal");
+    if (!modal) {
+      console.warn("Preview modal not found, creating it...");
+      this.setupModal();
+      modal = document.getElementById("previewModal");
+    }
+
+    // Safety check - if modal still doesn't exist, show error
+    if (!modal) {
+      console.error("Failed to create preview modal");
+      showToast("Lỗi hiển thị preview - modal không tồn tại", "error");
+      return;
+    }
+
     const title = document.getElementById("previewTitle");
     const body = document.getElementById("previewBody");
     const info = document.getElementById("previewInfo");
+
+    // Additional safety checks
+    if (!title || !body || !info) {
+      console.error("Preview modal elements not found");
+      showToast("Lỗi hiển thị preview - thiếu elements", "error");
+      return;
+    }
 
     // Show modal
     modal.style.display = "flex";
@@ -377,7 +419,11 @@ class PreviewManager {
 
   closePreview() {
     const modal = document.getElementById("previewModal");
-    modal.style.display = "none";
+    if (modal) {
+      modal.style.display = "none";
+    } else {
+      console.warn("⚠️ Cannot close preview: modal not found");
+    }
     this.currentFile = null;
   }
 
@@ -390,4 +436,3 @@ class PreviewManager {
 
 // Export instance
 const previewManager = new PreviewManager();
- 

@@ -69,7 +69,7 @@ class LazyLoadManager {
     }
   }
 
-  // Load image with retry logic
+  // Load image with retry logic (CSP-safe version)
   async loadImage(img) {
     const thumbnailUrl = img.dataset.thumbnailUrl;
     const fallbackIcon = img.dataset.fallbackIcon || "mdi-file";
@@ -88,12 +88,9 @@ class LazyLoadManager {
       // Show loading state
       img.classList.add("loading");
 
-      // Preload the image
-      const imageBlob = await this.preloadImage(thumbnailUrl);
-      const imageUrl = URL.createObjectURL(imageBlob);
+      // Direct image loading (CSP-safe approach)
+      await this.loadImageDirect(img, thumbnailUrl);
 
-      // Set the image source
-      img.src = imageUrl;
       img.classList.remove("lazy-loading", "loading");
       img.classList.add("loaded");
 
@@ -104,11 +101,6 @@ class LazyLoadManager {
       // Clean up data attributes
       delete img.dataset.thumbnailUrl;
       delete img.dataset.fallbackIcon;
-
-      // Cleanup blob URL after image loads
-      img.onload = () => {
-        setTimeout(() => URL.revokeObjectURL(imageUrl), 1000);
-      };
     } catch (error) {
       console.warn("Failed to load thumbnail:", thumbnailUrl, error);
 
@@ -128,6 +120,26 @@ class LazyLoadManager {
         this.loadedImages.add(img);
       }
     }
+  }
+
+  // CSP-safe direct image loading
+  async loadImageDirect(img, url) {
+    return new Promise((resolve, reject) => {
+      const tempImg = new Image();
+
+      tempImg.onload = () => {
+        // Set the source directly (CSP-safe)
+        img.src = url;
+        resolve();
+      };
+
+      tempImg.onerror = error => {
+        reject(new Error(`Failed to load image: ${url}`));
+      };
+
+      // Start loading the image
+      tempImg.src = url;
+    });
   }
 
   // Preload image with fetch

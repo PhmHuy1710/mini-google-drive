@@ -9,7 +9,7 @@ class App {
 
   async init() {
     try {
-      console.log("🚀 Initializing Mini Google Drive...");
+      console.log("🚀 Initializing Mini Google Drive v2.4.2...");
 
       // Mobile optimizations
       this.setupMobileOptimizations();

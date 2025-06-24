@@ -1,5 +1,5 @@
-// Service Worker for Mini Google Drive v2.3.0
-const CACHE_NAME = "mini-drive-v2.3.0";
+// Service Worker for Mini Google Drive v2.4.2
+const CACHE_NAME = "mini-drive-v2.4.2";
 const OFFLINE_URL = "/offline.html";
 
 // Files to cache for offline access (only same-origin to avoid CSP issues)

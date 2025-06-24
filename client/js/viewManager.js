@@ -82,6 +82,7 @@ class ViewManager {
     // Update UI
     this.updateViewDisplay();
     this.updateToggleIcon();
+    this.updatePaginationVisibility();
 
     // Re-render files in new view (safe check to avoid circular calls)
     if (
@@ -139,6 +140,29 @@ class ViewManager {
       // Show grid icon when in list mode (to switch to grid)
       this.viewToggleIcon.className = "mdi mdi-view-grid";
       this.viewToggleBtn.title = "Chuyển sang chế độ lưới";
+    }
+  }
+
+  updatePaginationVisibility() {
+    // Hide pagination in grid view, show in list view
+    const paginationContainer = document.querySelector(".pagination-container");
+    if (paginationContainer) {
+      if (this.currentView === "grid") {
+        paginationContainer.style.display = "none";
+        console.log("📄 Pagination hidden for grid view");
+      } else {
+        // Only show pagination in list view if paginationManager exists and is needed
+        if (typeof paginationManager !== "undefined" && paginationManager) {
+          if (paginationManager.isVisible && paginationManager.totalPages > 1) {
+            paginationContainer.style.display = "flex";
+            console.log("📄 Pagination shown for list view");
+          } else {
+            paginationContainer.style.display = "none";
+          }
+        } else {
+          paginationContainer.style.display = "none";
+        }
+      }
     }
   }
 
@@ -309,11 +333,7 @@ class ViewManager {
             data-file-id="${file.id}"
             class="file-thumbnail lazy-loading"
             alt="${file.name}"
-            style="display: none;"
-            onload="this.style.display='block'; this.nextElementSibling?.remove();"
-            onerror="this.style.display='none'; this.nextElementSibling?.style.display='block';"
           />
-          <span class="${iconClass}" style="${iconStyle}; display: block;"></span>
         </div>`;
     } else {
       // Regular icon for non-image files
@@ -347,18 +367,34 @@ class ViewManager {
     // Initialize lazy loading for thumbnails if LazyLoadManager is available
     if (
       typeof window.lazyLoadManager !== "undefined" &&
-      window.lazyLoadManager
+      window.lazyLoadManager &&
+      typeof window.lazyLoadManager.setupLazyLoad === "function"
     ) {
-      const thumbnails = document.querySelectorAll(
-        ".file-thumbnail.lazy-loading"
-      );
-      thumbnails.forEach(thumbnail => {
-        window.lazyLoadManager.observeElement(thumbnail);
-      });
+      try {
+        const thumbnails = document.querySelectorAll(
+          ".file-thumbnail.lazy-loading"
+        );
 
-      console.log(
-        `🖼️ Lazy loading initialized for ${thumbnails.length} thumbnails`
-      );
+        thumbnails.forEach(thumbnail => {
+          const thumbnailUrl = thumbnail.getAttribute("data-src");
+          const fallbackIcon = "mdi-image";
+
+          if (thumbnailUrl) {
+            window.lazyLoadManager.setupLazyLoad(
+              thumbnail,
+              thumbnailUrl,
+              fallbackIcon
+            );
+          }
+        });
+
+        console.log(
+          `🖼️ Lazy loading initialized for ${thumbnails.length} thumbnails`
+        );
+      } catch (error) {
+        console.warn("⚠️ Error initializing lazy loading:", error);
+        this.loadAllThumbnailsImmediately();
+      }
     } else {
       // Fallback: load all images immediately
       console.warn(

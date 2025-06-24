@@ -2,7 +2,7 @@
   "name": "Mini Google Drive",
   "short_name": "MiniDrive",
   "description": "Modern file management system using Google Drive API with responsive design and advanced features",
-  "version": "2.3.0",
+  "version": "2.4.2",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#4a9eff",

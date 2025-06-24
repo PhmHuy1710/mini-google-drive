@@ -7,6 +7,7 @@ class PaginationManager {
     this.pageSize = 50; // Default page size
     this.folderPageStates = new Map(); // Store page state per folder
     this.isEnabled = false;
+    this.isVisible = false; // Track if pagination is currently visible
     this.storageKey = "mini-drive-pagination";
 
     this.init();
@@ -15,7 +16,35 @@ class PaginationManager {
   init() {
     this.loadSettings();
     this.createPaginationUI();
+    this.setupViewChangeListener();
     console.log("📄 Pagination Manager initialized");
+  }
+
+  setupViewChangeListener() {
+    // Listen for view changes to update pagination visibility
+    window.addEventListener("viewChanged", event => {
+      this.handleViewChange(event.detail.view);
+    });
+  }
+
+  handleViewChange(view) {
+    // In grid view, always hide pagination
+    // In list view, show/hide based on pagination state
+    const container = document.getElementById("paginationContainer");
+    if (!container) return;
+
+    if (view === "grid") {
+      container.style.display = "none";
+      console.log("📄 Pagination hidden for grid view");
+    } else if (view === "list") {
+      // Only show if pagination is enabled and has multiple pages
+      if (this.isEnabled && this.totalPages > 1) {
+        container.style.display = "flex";
+        console.log("📄 Pagination shown for list view");
+      } else {
+        container.style.display = "none";
+      }
+    }
   }
 
   loadSettings() {
@@ -262,6 +291,7 @@ class PaginationManager {
     if (container) {
       container.style.display = "flex";
       this.isEnabled = true;
+      this.isVisible = true;
     }
   }
 
@@ -270,6 +300,7 @@ class PaginationManager {
     if (container) {
       container.style.display = "none";
       this.isEnabled = false;
+      this.isVisible = false;
     }
   }
 
