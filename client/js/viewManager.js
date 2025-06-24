@@ -157,6 +157,16 @@ class ViewManager {
   // Method to render files in current view
   renderFiles(files) {
     if (this.currentView === "grid") {
+      // Check if virtual scrolling should handle this (500+ files)
+      if (
+        typeof virtualScrollManager !== "undefined" &&
+        virtualScrollManager &&
+        files.length >= 500
+      ) {
+        // Let virtual scrolling handle the rendering
+        return false;
+      }
+
       this.renderGridView(files);
     } else {
       // List view is handled by fileManager
@@ -178,6 +188,9 @@ class ViewManager {
       const gridItem = this.createGridItem(file);
       this.fileGrid.appendChild(gridItem);
     });
+
+    // Trigger lazy loading for thumbnails
+    this.initializeLazyLoading();
   }
 
   createGridItem(file) {
@@ -230,7 +243,7 @@ class ViewManager {
       </div>
       
       <div class="file-grid-icon">
-        <span class="${iconClass}" style="${iconStyle}"></span>
+        ${this.createFileIcon(file, iconClass, iconStyle)}
       </div>
       
       <div class="file-grid-name" title="${file.name}">${file.name}</div>
@@ -282,6 +295,91 @@ class ViewManager {
     });
 
     return item;
+  }
+
+  createFileIcon(file, iconClass, iconStyle) {
+    const isImageFile = this.isImageFile(file.name);
+
+    if (isImageFile && !file.isFolder) {
+      // Create lazy-loaded image thumbnail for image files
+      return `
+        <div class="file-thumbnail-container">
+          <img 
+            data-src="/api/download/${file.id}"
+            data-file-id="${file.id}"
+            class="file-thumbnail lazy-loading"
+            alt="${file.name}"
+            style="display: none;"
+            onload="this.style.display='block'; this.nextElementSibling?.remove();"
+            onerror="this.style.display='none'; this.nextElementSibling?.style.display='block';"
+          />
+          <span class="${iconClass}" style="${iconStyle}; display: block;"></span>
+        </div>`;
+    } else {
+      // Regular icon for non-image files
+      return `<span class="${iconClass}" style="${iconStyle}"></span>`;
+    }
+  }
+
+  isImageFile(fileName) {
+    if (!fileName) return false;
+
+    const imageExtensions = [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".bmp",
+      ".webp",
+      ".svg",
+      ".ico",
+      ".tiff",
+      ".tif",
+    ];
+
+    const extension = fileName
+      .toLowerCase()
+      .substring(fileName.lastIndexOf("."));
+    return imageExtensions.includes(extension);
+  }
+
+  initializeLazyLoading() {
+    // Initialize lazy loading for thumbnails if LazyLoadManager is available
+    if (
+      typeof window.lazyLoadManager !== "undefined" &&
+      window.lazyLoadManager
+    ) {
+      const thumbnails = document.querySelectorAll(
+        ".file-thumbnail.lazy-loading"
+      );
+      thumbnails.forEach(thumbnail => {
+        window.lazyLoadManager.observeElement(thumbnail);
+      });
+
+      console.log(
+        `🖼️ Lazy loading initialized for ${thumbnails.length} thumbnails`
+      );
+    } else {
+      // Fallback: load all images immediately
+      console.warn(
+        "⚠️ LazyLoadManager not available, loading images immediately"
+      );
+      this.loadAllThumbnailsImmediately();
+    }
+  }
+
+  loadAllThumbnailsImmediately() {
+    const thumbnails = document.querySelectorAll(
+      ".file-thumbnail.lazy-loading"
+    );
+    thumbnails.forEach(thumbnail => {
+      const src = thumbnail.getAttribute("data-src");
+      if (src) {
+        thumbnail.src = src;
+        thumbnail.classList.remove("lazy-loading");
+        thumbnail.classList.add("loaded");
+      }
+    });
   }
 
   // Method to force refresh current view

@@ -172,10 +172,68 @@ class FileManager {
         if (typeof paginationManager !== "undefined" && paginationManager) {
           paginationManager.hidePagination();
         }
+
+        // Disable virtual scrolling for empty folder
+        if (
+          typeof virtualScrollManager !== "undefined" &&
+          virtualScrollManager
+        ) {
+          virtualScrollManager.disable();
+        }
         return;
       }
 
       emptyNote.style.display = "none";
+
+      // Try virtual scrolling for large lists first (500+ items)
+      if (
+        typeof virtualScrollManager !== "undefined" &&
+        virtualScrollManager &&
+        sortedFiles.length >= 500
+      ) {
+        const currentView =
+          typeof viewManager !== "undefined" &&
+          viewManager &&
+          viewManager.isGridView()
+            ? "grid"
+            : "list";
+
+        const container = currentView === "grid" ? fileGrid : tableWrapper;
+
+        if (
+          virtualScrollManager.initialize(container, sortedFiles, currentView)
+        ) {
+          // Virtual scrolling handled the rendering
+          console.log(
+            `🚀 Virtual scrolling active for ${sortedFiles.length} files`
+          );
+
+          // Show virtual scroll info
+          this.showVirtualScrollInfo(sortedFiles.length);
+
+          // Hide pagination when virtual scrolling is active
+          if (typeof paginationManager !== "undefined" && paginationManager) {
+            paginationManager.hidePagination();
+          }
+
+          // Notify multi-select manager about file list update
+          if (multiSelectManager) {
+            multiSelectManager.onFileListRendered();
+          }
+
+          // Setup drag and drop for file operations
+          this.setupFileDragAndDrop();
+          return;
+        }
+      } else if (
+        typeof virtualScrollManager !== "undefined" &&
+        virtualScrollManager
+      ) {
+        // Disable virtual scrolling for smaller lists
+        virtualScrollManager.disable();
+        // Remove any existing virtual scroll info
+        this.hideVirtualScrollInfo();
+      }
 
       // Check if viewManager should handle rendering (safe check)
       if (
@@ -816,6 +874,47 @@ class FileManager {
         fileOperationsManager.setupDragAndDrop(item, fileData);
       }
     });
+  }
+
+  // Virtual scroll info methods
+  showVirtualScrollInfo(totalFiles) {
+    let infoContainer = document.querySelector(".virtual-scroll-info");
+    if (!infoContainer) {
+      // Create info container if it doesn't exist
+      infoContainer = document.createElement("div");
+      infoContainer.className = "virtual-scroll-info";
+
+      // Insert after search controls and before file list
+      const searchControls = document.querySelector(".search-controls");
+      if (searchControls && searchControls.nextSibling) {
+        searchControls.parentNode.insertBefore(
+          infoContainer,
+          searchControls.nextSibling
+        );
+      } else {
+        // Fallback: insert before table wrapper
+        const tableWrapper = document.querySelector(".table-wrapper");
+        if (tableWrapper) {
+          tableWrapper.parentNode.insertBefore(infoContainer, tableWrapper);
+        }
+      }
+    }
+
+    infoContainer.innerHTML = `
+      <div class="virtual-scroll-badge">
+        <span class="mdi mdi-lightning-bolt"></span>
+        <span>Virtual Scrolling Active</span>
+        <span class="file-count">${totalFiles.toLocaleString()} files</span>
+      </div>
+    `;
+    infoContainer.style.display = "block";
+  }
+
+  hideVirtualScrollInfo() {
+    const infoContainer = document.querySelector(".virtual-scroll-info");
+    if (infoContainer) {
+      infoContainer.style.display = "none";
+    }
   }
 }
 

@@ -10,9 +10,16 @@
   <title>Mini Google Drive - File Manager</title>
   <meta name="description" content="Modern file management system using Google Drive API">
   
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mini Google Drive">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMTAgNEg4QzIuODkgNCAyIDQuODkgMiA2VjE4QTIgMiAwIDAgMCA0IDE4SDE2QTIgMiAwIDAgMCAxOCAxNlYxMEw5IDhMMTAgNFoiIGZpbGw9IiM0YTllZmYiLz4KPHBhdGggZD0iTTExIDFINUEyIDIgMCAwIDAgMyAzVjE1QTIgMiAwIDAgMCA1IDE3SDE3QTIgMiAwIDAgMCAxOSAxNVY3TDEzIDFMMTEgMVoiIGZpbGw9IiMzNDk0Y2MiLz4KPHBhdGggZD0iTTE0LjUgMkgxMUEyIDIgMCAwIDAgOSA0VjE2QTIgMiAwIDAgMCAxMSAxOEgxOUEyIDIgMCAwIDAgMjEgMTZWOEwxNC41IDJaIiBmaWxsPSIjNGE5ZWZmIi8+Cjwvc3ZnPgo=">
+  
   <!-- Icons & Fonts -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-  <link rel="icon" href="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png">
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDRIOEMyLjg5IDQgMiA0Ljg5IDIgNlYxOEEyIDIgMCAwIDAgNCAxOEgxNkEyIDIgMCAwIDAgMTggMTZWMTBMOSA4TDEwIDRaIiBmaWxsPSIjNGE5ZWZmIi8+CjxwYXRoIGQ9Ik0xMSAxSDVBMiAyIDAgMCAwIDMgM1YxNUEyIDIgMCAwIDAgNSAxN0gxN0EyIDIgMCAwIDAgMTkgMTVWN0wxMyAxTDExIDFaIiBmaWxsPSIjMzQ5NGNjIi8+CjxwYXRoIGQ9Ik0xNC41IDJIMTFBMiAyIDAgMCAwIDkgNFYxNkEyIDIgMCAwIDAgMTEgMThIMTlBMiAyIDAgMCAwIDIxIDE2VjhMMTQuNSAyWiIgZmlsbD0iIzRhOWVmZiIvPgo8L3N2Zz4K">
   
   <!-- Styles -->
   <link rel="stylesheet" href="css/main.css">
@@ -269,6 +276,8 @@
   <script src="js/searchManager.js"></script>
   <script src="js/previewManager.js"></script>
   <script src="js/multiSelectManager.js"></script>
+  <script src="js/lazyLoadManager.js"></script>
+  <script src="js/virtualScrollManager.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html> 

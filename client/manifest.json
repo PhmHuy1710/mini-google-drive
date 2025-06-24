@@ -1,0 +1,97 @@
+{
+  "name": "Mini Google Drive",
+  "short_name": "MiniDrive",
+  "description": "Modern file management system using Google Drive API with responsive design and advanced features",
+  "version": "2.3.0",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#4a9eff",
+  "theme_color": "#4a9eff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "vi",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDRIOEMyLjg5IDQgMiA0Ljg5IDIgNlYxOEEyIDIgMCAwIDAgNCAxOEgxNkEyIDIgMCAwIDAgMTggMTZWMTBMOSA4TDEwIDRaIiBmaWxsPSIjNGE5ZWZmIi8+CjxwYXRoIGQ9Ik0xMSAxSDVBMiAyIDAgMCAwIDMgM1YxNUEyIDIgMCAwIDAgNSAxN0gxN0EyIDIgMCAwIDAgMTkgMTVWN0wxMyAxTDExIDFaIiBmaWxsPSIjMzQ5NGNjIi8+CjxwYXRoIGQ9Ik0xNC41IDJIMTFBMiAyIDAgMCAwIDkgNFYxNkEyIDIgMCAwIDAgMTEgMThIMTlBMiAyIDAgMCAwIDIxIDE2VjhMMTQuNSAyWiIgZmlsbD0iIzRhOWVmZiIvPgo8L3N2Zz4K",
+      "sizes": "48x48",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMTAgNEg4QzIuODkgNCAyIDQuODkgMiA2VjE4QTIgMiAwIDAgMCA0IDE4SDE2QTIgMiAwIDAgMCAxOCAxNlYxMEw5IDhMMTAgNFoiIGZpbGw9IiM0YTllZmYiLz4KPHBhdGggZD0iTTExIDFINUEyIDIgMCAwIDAgMyAzVjE1QTIgMiAwIDAgMCA1IDE3SDE3QTIgMiAwIDAgMCAxOSAxNVY3TDEzIDFMMTEgMVoiIGZpbGw9IiMzNDk0Y2MiLz4KPHBhdGggZD0iTTE0LjUgMkgxMUEyIDIgMCAwIDAgOSA0VjE2QTIgMiAwIDAgMCAxMSAxOEgxOUEyIDIgMCAwIDAgMjEgMTZWOEwxNC41IDJaIiBmaWxsPSIjNGE5ZWZmIi8+Cjwvc3ZnPgo=",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMTAgNEg4QzIuODkgNCAyIDQuODkgMiA2VjE4QTIgMiAwIDAgMCA0IDE4SDE2QTIgMiAwIDAgMCAxOCAxNlYxMEw5IDhMMTAgNFoiIGZpbGw9IiM0YTllZmYiLz4KPHBhdGggZD0iTTExIDFINUEyIDIgMCAwIDAgMyAzVjE1QTIgMiAwIDAgMCA1IDE3SDE3QTIgMiAwIDAgMCAxOSAxNVY3TDEzIDFMMTEgMVoiIGZpbGw9IiMzNDk0Y2MiLz4KPHBhdGggZD0iTTE0LjUgMkgxMUEyIDIgMCAwIDAgOSA0VjE2QTIgMiAwIDAgMCAxMSAxOEgxOUEyIDIgMCAwIDAgMjEgMTZWOEwxNC41IDJaIiBmaWxsPSIjNGE5ZWZmIi8+Cjwvc3ZnPgo=",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Upload Files",
+      "short_name": "Upload",
+      "description": "Upload files to Drive",
+      "url": "/?action=upload",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDRIOEMyLjg5IDQgMiA0Ljg5IDIgNlYxOEEyIDIgMCAwIDAgNCAxOEgxNkEyIDIgMCAwIDAgMTggMTZWMTBMOSA4TDEwIDRaIiBmaWxsPSIjNGE5ZWZmIi8+CjxwYXRoIGQ9Ik0xMSAxSDVBMiAyIDAgMCAwIDMgM1YxNUEyIDIgMCAwIDAgNSAxN0gxN0EyIDIgMCAwIDAgMTkgMTVWN0wxMyAxTDExIDFaIiBmaWxsPSIjMzQ5NGNjIi8+CjxwYXRoIGQ9Ik0xNC41IDJIMTFBMiAyIDAgMCAwIDkgNFYxNkEyIDIgMCAwIDAgMTEgMThIMTlBMiAyIDAgMCAwIDIxIDE2VjhMMTQuNSAyWiIgZmlsbD0iIzRhOWVmZiIvPgo8L3N2Zz4K",
+          "sizes": "48x48",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Search Files",
+      "short_name": "Search",
+      "description": "Search files and folders",
+      "url": "/?action=search",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDRIOEMyLjg5IDQgMiA0Ljg5IDIgNlYxOEEyIDIgMCAwIDAgNCAxOEgxNkEyIDIgMCAwIDAgMTggMTZWMTBMOSA4TDEwIDRaIiBmaWxsPSIjNGE5ZWZmIi8+CjxwYXRoIGQ9Ik0xMSAxSDVBMiAyIDAgMCAwIDMgM1YxNUEyIDIgMCAwIDAgNSAxN0gxN0EyIDIgMCAwIDAgMTkgMTVWN0wxMyAxTDExIDFaIiBmaWxsPSIjMzQ5NGNjIi8+CjxwYXRoIGQ9Ik0xNC41IDJIMTFBMiAyIDAgMCAwIDkgNFYxNkEyIDIgMCAwIDAgMTEgMThIMTlBMiAyIDAgMCAwIDIxIDE2VjhMMTQuNSAyWiIgZmlsbD0iIzRhOWVmZiIvPgo8L3N2Zz4K",
+          "sizes": "48x48",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Recycle Bin",
+      "short_name": "Trash",
+      "description": "View deleted files",
+      "url": "/recycle-bin.html",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDRIOEMyLjg5IDQgMiA0Ljg5IDIgNlYxOEEyIDIgMCAwIDAgNCAxOEgxNkEyIDIgMCAwIDAgMTggMTZWMTBMOSA4TDEwIDRaIiBmaWxsPSIjNGE5ZWZmIi8+CjxwYXRoIGQ9Ik0xMSAxSDVBMiAyIDAgMCAwIDMgM1YxNUEyIDIgMCAwIDAgNSAxN0gxN0EyIDIgMCAwIDAgMTkgMTVWN0wxMyAxTDExIDFaIiBmaWxsPSIjMzQ5NGNjIi8+CjxwYXRoIGQ9Ik0xNC41IDJIMTFBMiAyIDAgMCAwIDkgNFYxNkEyIDIgMCAwIDAgMTEgMThIMTlBMiAyIDAgMCAwIDIxIDE2VjhMMTQuNSAyWiIgZmlsbD0iIzRhOWVmZiIvPgo8L3N2Zz4K",
+          "sizes": "48x48",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://i.imgur.com/screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "File list view"
+    },
+    {
+      "src": "https://i.imgur.com/screenshot2.png", 
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile interface"
+    }
+  ],
+  "features": [
+    "Cross-Platform",
+    "File Management",
+    "Offline Support"
+  ],
+  "prefer_related_applications": false
+} 

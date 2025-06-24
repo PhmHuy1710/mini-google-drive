@@ -403,10 +403,13 @@ class FileOperationsManager {
       }
 
       // Get target folder ID from breadcrumb
-      const targetFolderId = this.getBreadcrumbFolderId(element);
-      if (targetFolderId === null) {
-        return; // Invalid target
+      const breadcrumbResult = this.getBreadcrumbFolderId(element);
+      if (breadcrumbResult === undefined) {
+        return; // Invalid breadcrumb element
       }
+
+      // Note: targetFolderId can be null for root folder, which is valid
+      const targetFolderId = breadcrumbResult;
 
       // Check if dropping on current folder
       if (targetFolderId === fileManager.currentFolderId) {
@@ -443,11 +446,13 @@ class FileOperationsManager {
       const breadcrumbIndex = parseInt(
         element.getAttribute("data-breadcrumb-index")
       );
+
       if (
         !isNaN(breadcrumbIndex) &&
         fileManager.breadcrumbs &&
         fileManager.breadcrumbs[breadcrumbIndex]
       ) {
+        // Return the folder ID (which can be null for root folder)
         return fileManager.breadcrumbs[breadcrumbIndex].id;
       }
     } else if (element.classList.contains("breadcrumb-dropdown-item")) {
@@ -455,15 +460,18 @@ class FileOperationsManager {
       const breadcrumbIndex = parseInt(
         element.getAttribute("data-breadcrumb-index")
       );
+
       if (
         !isNaN(breadcrumbIndex) &&
         fileManager.breadcrumbs &&
         fileManager.breadcrumbs[breadcrumbIndex]
       ) {
+        // Return the folder ID (which can be null for root folder)
         return fileManager.breadcrumbs[breadcrumbIndex].id;
       }
     }
-    return null;
+    // Return undefined if breadcrumb element is invalid
+    return undefined;
   }
 
   async handleBreadcrumbDrop(targetFolderId, element) {
@@ -502,6 +510,12 @@ class FileOperationsManager {
 
   // API calls
   async moveFiles(fileIds, targetFolderId) {
+    console.log(`🔄 Attempting to move files:`, { fileIds, targetFolderId });
+
+    // Normalize targetFolderId for API call
+    const normalizedTargetFolderId =
+      targetFolderId === undefined ? null : targetFolderId;
+
     const response = await fetch("/api/move", {
       method: "POST",
       headers: {
@@ -509,19 +523,30 @@ class FileOperationsManager {
       },
       body: JSON.stringify({
         fileIds,
-        targetFolderId,
+        targetFolderId: normalizedTargetFolderId,
       }),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || "Failed to move files");
+      console.error(`❌ Move files API error:`, {
+        status: response.status,
+        statusText: response.statusText,
+        error,
+      });
+      throw new Error(error.detail || error.error || "Failed to move files");
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log(`✅ Move files successful:`, result);
+    return result;
   }
 
   async copyFiles(fileIds, targetFolderId) {
+    // Normalize targetFolderId for API call
+    const normalizedTargetFolderId =
+      targetFolderId === undefined ? null : targetFolderId;
+
     const response = await fetch("/api/copy", {
       method: "POST",
       headers: {
@@ -529,7 +554,7 @@ class FileOperationsManager {
       },
       body: JSON.stringify({
         fileIds,
-        targetFolderId,
+        targetFolderId: normalizedTargetFolderId,
       }),
     });
 

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Mini Google Drive</title>
+  <meta name="description" content="App đang trong chế độ offline">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mini Google Drive">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMTAgNEg4QzIuODkgNCAyIDQuODkgMiA2VjE4QTIgMiAwIDAgMCA0IDE4SDE2QTIgMiAwIDAgMCAxOCAxNlYxMEw5IDhMMTAgNFoiIGZpbGw9IiM0YTllZmYiLz4KPHBhdGggZD0iTTExIDFINUEyIDIgMCAwIDAgMyAzVjE1QTIgMiAwIDAgMCA1IDE3SDE3QTIgMiAwIDAgMCAxOSAxNVY3TDEzIDFMMTEgMVoiIGZpbGw9IiMzNDk0Y2MiLz4KPHBhdGggZD0iTTE0LjUgMkgxMUEyIDIgMCAwIDAgOSA0VjE2QTIgMiAwIDAgMCAxMSAxOEgxOUEyIDIgMCAwIDAgMjEgMTZWOEwxNC41IDJaIiBmaWxsPSIjNGE5ZWZmIi8+Cjwvc3ZnPgo=">
+  
+  <!-- Icons & Fonts -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDRIOEMyLjg5IDQgMiA0Ljg5IDIgNlYxOEEyIDIgMCAwIDAgNCAxOEgxNkEyIDIgMCAwIDAgMTggMTZWMTBMOSA4TDEwIDRaIiBmaWxsPSIjNGE5ZWZmIi8+CjxwYXRoIGQ9Ik0xMSAxSDVBMiAyIDAgMCAwIDMgM1YxNUEyIDIgMCAwIDAgNSAxN0gxN0EyIDIgMCAwIDAgMTkgMTVWN0wxMyAxTDExIDFaIiBmaWxsPSIjMzQ5NGNjIi8+CjxwYXRoIGQ9Ik0xNC41IDJIMTFBMiAyIDAgMCAwIDkgNFYxNkEyIDIgMCAwIDAgMTEgMThIMTlBMiAyIDAgMCAwIDIxIDE2VjhMMTQuNSAyWiIgZmlsbD0iIzRhOWVmZiIvPgo8L3N2Zz4K">
+  
+  <style>
+    :root {
+      --primary: #4a9eff;
+      --primary-dark: #3a89ef;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --bg-tertiary: #e9ecef;
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --text-muted: #999999;
+      --border-primary: #e1e5e9;
+      --shadow-light: rgba(0, 0, 0, 0.1);
+      --shadow-medium: rgba(0, 0, 0, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .offline-container {
+      background: var(--bg-primary);
+      border-radius: 16px;
+      padding: 40px 30px;
+      box-shadow: 0 8px 32px var(--shadow-light);
+      max-width: 500px;
+      width: 100%;
+      border: 1px solid var(--border-primary);
+    }
+
+    .offline-icon {
+      font-size: 64px;
+      color: var(--primary);
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+
+    .offline-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .offline-message {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+
+    .offline-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px var(--shadow-medium);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .network-status {
+      margin-top: 20px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .network-status.offline {
+      background: #fee;
+      color: #c53030;
+      border: 1px solid #feb2b2;
+    }
+
+    .network-status.online {
+      background: #f0fff4;
+      color: #38a169;
+      border: 1px solid #9ae6b4;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+
+    @media (max-width: 480px) {
+      .offline-container {
+        padding: 30px 20px;
+        margin: 10px;
+      }
+
+      .offline-icon {
+        font-size: 48px;
+      }
+
+      .offline-title {
+        font-size: 20px;
+      }
+
+      .offline-message {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <div class="offline-icon">
+      <i class="mdi mdi-wifi-off"></i>
+    </div>
+    
+    <h1 class="offline-title">Bạn đang offline</h1>
+    
+    <p class="offline-message">
+      Kết nối mạng không khả dụng. Vui lòng kiểm tra kết nối internet và thử lại.
+    </p>
+
+    <div class="offline-actions">
+      <button class="btn" onclick="window.location.reload()">
+        <i class="mdi mdi-refresh"></i>
+        Thử lại
+      </button>
+      
+      <a href="/" class="btn btn-secondary">
+        <i class="mdi mdi-home"></i>
+        Về trang chủ
+      </a>
+    </div>
+
+    <div class="network-status offline" id="networkStatus">
+      <i class="mdi mdi-wifi-off"></i>
+      Không có kết nối mạng
+    </div>
+  </div>
+
+  <script>
+    // Network status detection
+    function updateNetworkStatus() {
+      const statusElement = document.getElementById('networkStatus');
+      
+      if (navigator.onLine) {
+        statusElement.className = 'network-status online';
+        statusElement.innerHTML = '<i class="mdi mdi-wifi"></i> Đã kết nối mạng';
+        
+        // Auto redirect when back online
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } else {
+        statusElement.className = 'network-status offline';
+        statusElement.innerHTML = '<i class="mdi mdi-wifi-off"></i> Không có kết nối mạng';
+      }
+    }
+
+    // Listen for online/offline events
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    // Check status on load
+    updateNetworkStatus();
+
+    // Auto-refresh every 30 seconds when offline
+    if (!navigator.onLine) {
+      setInterval(() => {
+        if (navigator.onLine) {
+          window.location.href = '/';
+        }
+      }, 30000);
+    }
+  </script>
+</body>
+</html> 

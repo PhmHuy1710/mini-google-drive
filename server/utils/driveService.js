@@ -716,9 +716,10 @@ class DriveService {
   // Move files to different folder
   async moveFiles(fileIds, targetFolderId) {
     try {
-      console.log(
-        `📁 Moving ${fileIds.length} files to folder: ${targetFolderId}`
-      );
+      const destination = targetFolderId
+        ? `folder: ${targetFolderId}`
+        : "root folder (My Drive)";
+      console.log(`📁 Moving ${fileIds.length} files to ${destination}`);
 
       const results = [];
 
@@ -732,15 +733,25 @@ class DriveService {
 
           const currentParents = fileInfo.data.parents || [];
 
-          // Move file by adding to new parent and removing from old parents
-          await this.drive.files.update({
-            fileId,
-            addParents: targetFolderId,
-            removeParents: currentParents.join(","),
-            fields: "id, name, parents",
-          });
+          // Handle different move scenarios
+          if (targetFolderId === null || targetFolderId === undefined) {
+            // Moving to root folder - remove from all parents
+            await this.drive.files.update({
+              fileId,
+              removeParents: currentParents.join(","),
+              fields: "id, name, parents",
+            });
+          } else {
+            // Moving to specific folder - add new parent and remove old ones
+            await this.drive.files.update({
+              fileId,
+              addParents: targetFolderId,
+              removeParents: currentParents.join(","),
+              fields: "id, name, parents",
+            });
+          }
 
-          console.log(`✅ Moved file: ${fileInfo.data.name}`);
+          console.log(`✅ Moved file: ${fileInfo.data.name} to ${destination}`);
           results.push({
             id: fileId,
             name: fileInfo.data.name,
@@ -766,9 +777,10 @@ class DriveService {
   // Copy files to different folder
   async copyFiles(fileIds, targetFolderId) {
     try {
-      console.log(
-        `📁 Copying ${fileIds.length} files to folder: ${targetFolderId}`
-      );
+      const destination = targetFolderId
+        ? `folder: ${targetFolderId}`
+        : "root folder (My Drive)";
+      console.log(`📁 Copying ${fileIds.length} files to ${destination}`);
 
       const results = [];
 
@@ -789,16 +801,24 @@ class DriveService {
             results.push(copiedFolder);
           } else {
             // For files, use Google Drive copy API
+            const copyResource = {
+              name: `Copy of ${fileInfo.data.name}`,
+            };
+
+            // Only add parents if targetFolderId is not null (root folder)
+            if (targetFolderId !== null && targetFolderId !== undefined) {
+              copyResource.parents = [targetFolderId];
+            }
+
             const copiedFile = await this.drive.files.copy({
               fileId,
-              resource: {
-                name: `Copy of ${fileInfo.data.name}`,
-                parents: [targetFolderId],
-              },
+              resource: copyResource,
               fields: "id, name",
             });
 
-            console.log(`✅ Copied file: ${fileInfo.data.name}`);
+            console.log(
+              `✅ Copied file: ${fileInfo.data.name} to ${destination}`
+            );
             results.push({
               id: copiedFile.data.id,
               name: copiedFile.data.name,
@@ -832,7 +852,7 @@ class DriveService {
         fields: "id, name",
       });
 
-      // Create new folder
+      // Create new folder (createFolder handles null parentId correctly)
       const newFolder = await this.createFolder(
         `Copy of ${folderInfo.data.name}`,
         targetFolderId
@@ -857,7 +877,12 @@ class DriveService {
         }
       }
 
-      console.log(`✅ Copied folder: ${folderInfo.data.name}`);
+      const destination = targetFolderId
+        ? `folder: ${targetFolderId}`
+        : "root folder (My Drive)";
+      console.log(
+        `✅ Copied folder: ${folderInfo.data.name} to ${destination}`
+      );
       return {
         id: newFolder.id,
         name: newFolder.name,

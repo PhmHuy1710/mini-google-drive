@@ -1,5 +1,69 @@
 # 📝 Mini Google Drive - Changelog
 
+## 🗓️ Version 2.4.0 - January 2, 2025 - Virtual Scrolling & Phase 3 Completion
+
+### ✨ **NEW Features**
+- **🚀 Virtual Scrolling Implementation**
+  - Automatic activation for lists with 500+ files
+  - Optimized rendering with buffer zones for smooth scrolling
+  - Support for both list and grid views
+  - Performance monitoring and memory management
+  - Visual indicators when virtual scrolling is active
+  - Fallback to pagination for smaller lists
+
+### 🎯 **Performance Improvements**
+- **Memory Optimization**: Only renders visible items + buffer
+- **Smooth Scrolling**: 60fps scrolling performance for large lists
+- **Automatic Management**: Seamlessly switches between virtual scrolling and normal rendering
+- **Cross-Platform**: Works on mobile, tablet, and desktop
+
+### 🛠️ **Technical Enhancements**
+- New `VirtualScrollManager` class with comprehensive API
+- Integration with existing pagination and view systems
+- Enhanced CSS for virtual scroll containers
+- Proper cleanup and memory management
+
+### 🎉 **Milestone Achievement**
+- **Phase 3: 100% Complete** - All advanced features implemented
+- 12/12 Phase 3 features completed successfully
+
+### 📊 **Progress Update**
+- **Phase 1 (Core Features)**: ✅ **94%** (30/32 items)
+- **Phase 2 (UI/UX Enhancement)**: ✅ **100%** (6/6 items) 
+- **Phase 3 (Advanced Features)**: ✅ **100%** (12/12 items)
+
+---
+
+## 🗓️ Version 2.3.1 - January 2, 2025
+
+### 🛠️ **Bug Fixes & Optimizations**
+- **Fixed Service Worker CSP Issues**: Resolved Content Security Policy violations causing PWA functionality failures
+  - Removed external resource caching that violated CSP directives
+  - Updated manifest icons to use inline SVG data URIs
+  - Fixed external icon loading issues in HTML files
+- **Enhanced Lazy Loading System**: Improved thumbnail loading performance and reliability
+  - Added LazyLoadManager initialization to App class
+  - Fixed lazy loading integration with ViewManager
+  - Added fallback mechanisms for browsers without IntersectionObserver support
+
+### 📱 **PWA Improvements**
+- **CSP-Compliant Icons**: All manifest and HTML icons now use inline SVG data URIs
+- **Better Offline Experience**: Enhanced offline page with network status detection
+- **Service Worker Stability**: Improved caching strategy and error handling
+
+### 🎨 **UI/UX Enhancements**
+- **File Thumbnails in Grid View**: Added image preview thumbnails for image files
+  - Lazy-loaded thumbnails with smooth loading animations
+  - Fallback to file type icons when thumbnails fail
+  - Enhanced visual feedback with hover effects
+- **Improved CSS Styles**: Added comprehensive thumbnail styling with responsive design
+
+### 🔧 **Technical Updates**
+- Updated LazyLoadManager integration with proper initialization
+- Enhanced ViewManager with thumbnail support
+- Added offline.html page for PWA offline functionality
+- Improved error handling in Service Worker
+
 ## 🗓️ Version 2.3.0 - January 2, 2025
 
 ### ✨ **Breadcrumb Navigation Enhancement**
@@ -19,6 +83,52 @@
 - **Better dark/light theme integration** for all breadcrumb elements
 - **Performance improvements** for breadcrumb rendering
 - **Accessibility enhancements** with proper ARIA labels and keyboard navigation
+
+### 🎯 **New Features**
+- **Pagination System** for large folders (>100 files)
+- **Enhanced CSS Framework** with modern animations
+- **Server Management Tools** for development
+- **Advanced File Filters** (8 categories with visual indicators)
+
+### 🔧 **Code Quality**
+- **Dialog System Unification** - Replaced all browser alerts
+- **Mobile Action Manager** - Professional mobile interface
+- **Context Menu System** - Right-click and long-press support
+- **Skeleton Loading** - Smooth loading states
+
+### 🎨 **Design System**
+- **CSS Custom Properties** for theming
+- **Material Design Icons** integration
+- **Responsive Grid System** 
+- **Mobile-first Approach**
+- **Consistent Color Palette**
+
+### 🏗️ **Architecture**
+- **MVC Pattern** for backend organization
+- **Modular Frontend** with clear separation of concerns
+- **Event-driven Architecture** for component communication
+- **RESTful API** design with proper error handling
+
+### 🐛 **Bug Fixes & Optimizations**
+- **Root Folder Navigation**: Fixed "Tệp của bạn" move operations
+  - Proper handling of null/undefined folder IDs
+  - Enhanced API validation for root folder operations
+  - Consistent breadcrumb navigation behavior
+- **Auto-refresh Rate Limiting**: Prevent API overload
+  - 30-second throttling between auto-refreshes
+  - User feedback for throttled requests
+  - Improved tab visibility change handling
+
+### 🛠️ **Technical Improvements**
+- Enhanced error handling and user feedback
+- Improved logging for debugging breadcrumb operations
+- Better integration between file operations and UI components
+- Optimized event handling and performance
+
+### 📊 **Progress Update**
+- **Phase 1 (Core Features)**: ✅ **94%** (30/32 items)
+- **Phase 2 (UI/UX Enhancement)**: ✅ **100%** (6/6 items) 
+- **Phase 3 (Advanced Features)**: ✅ **92%** (11/12 items)
 
 ---
 

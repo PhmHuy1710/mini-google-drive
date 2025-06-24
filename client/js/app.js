@@ -2,6 +2,8 @@
 class App {
   constructor() {
     this.isInitialized = false;
+    this.lastRefreshTime = 0;
+    this.refreshThrottleTime = 300000; // 5 minutes minimum between auto-refreshes
     this.init();
   }
 
@@ -17,6 +19,22 @@ class App {
 
       // Ensure uploadManager config is loaded
       await this.initializeUploadManager();
+
+      // Initialize Lazy Loading Manager for performance optimization
+      if (typeof LazyLoadManager !== "undefined") {
+        window.lazyLoadManager = new LazyLoadManager();
+        console.log("✅ Lazy Loading Manager initialized");
+      } else {
+        console.warn("⚠️ LazyLoadManager not available");
+      }
+
+      // Initialize Virtual Scroll Manager for large lists optimization
+      if (typeof VirtualScrollManager !== "undefined") {
+        window.virtualScrollManager = new VirtualScrollManager();
+        console.log("✅ Virtual Scroll Manager initialized");
+      } else {
+        console.warn("⚠️ VirtualScrollManager not available");
+      }
 
       // Load initial data
       await this.loadInitialData();
@@ -247,7 +265,7 @@ class App {
             fileManager.downloadFile(fileId, fileName);
           } else {
             // Fallback
-          window.open(`/api/download/${fileId}`, "_blank");
+            window.open(`/api/download/${fileId}`, "_blank");
           }
         } else if (button.classList.contains("btn-rename")) {
           // Rename file
@@ -319,12 +337,32 @@ class App {
 
   handleVisibilityChange() {
     if (!document.hidden && this.isInitialized) {
-      // Refresh data when tab becomes visible again
-      setTimeout(() => {
-        this.refreshCurrentView().catch(error => {
-          console.error("Error refreshing view on visibility change:", error);
-        });
-      }, 1000);
+      // Throttle auto-refresh to prevent API rate limiting
+      const now = Date.now();
+      const timeSinceLastRefresh = now - this.lastRefreshTime;
+
+      if (timeSinceLastRefresh >= this.refreshThrottleTime) {
+        console.log("🔄 Auto-refresh triggered (tab became visible)");
+
+        // Refresh data when tab becomes visible again
+        setTimeout(() => {
+          this.refreshCurrentView().catch(error => {
+            console.error("Error refreshing view on visibility change:", error);
+          });
+        }, 1000);
+
+        this.lastRefreshTime = now;
+      } else {
+        const remainingTime = Math.ceil(
+          (this.refreshThrottleTime - timeSinceLastRefresh) / 1000
+        );
+        console.log(
+          `⏳ Auto-refresh throttled. Next refresh available in ${remainingTime} seconds`
+        );
+
+        // Show subtle notification about throttling
+        //showToast(`Tự động làm mới sau ${remainingTime}s`, "info", 2000);
+      }
     }
   }
 
@@ -352,6 +390,9 @@ class App {
 
       // Refresh storage info
       await fetchStorage();
+
+      // Update last refresh time for throttling
+      this.lastRefreshTime = Date.now();
 
       showToast("Đã làm mới!", "success");
     } catch (error) {
@@ -468,11 +509,118 @@ window.addEventListener("unhandledrejection", e => {
   }
 });
 
-// Service Worker registration (for future PWA features)
+// PWA Install prompt
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", e => {
+  // Prevent default mini-infobar
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Show custom install button
+  showPWAInstallButton();
+});
+
+function showPWAInstallButton() {
+  // Create install button if not exists
+  if (!document.getElementById("pwa-install-btn")) {
+    const installBtn = document.createElement("button");
+    installBtn.id = "pwa-install-btn";
+    installBtn.innerHTML = '<i class="mdi mdi-download"></i> Cài đặt App';
+    installBtn.className = "btn btn-primary";
+    installBtn.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      background: #4a9eff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    `;
+    installBtn.onclick = installPWA;
+
+    document.body.appendChild(installBtn);
+
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+      if (installBtn && installBtn.parentNode) {
+        installBtn.remove();
+      }
+    }, 10000);
+  }
+}
+
+async function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === "accepted") {
+      console.log("✅ PWA installed successfully");
+      showToast("App đã được cài đặt!", "success");
+    }
+
+    deferredPrompt = null;
+    document.getElementById("pwa-install-btn")?.remove();
+  }
+}
+
+// Service Worker registration with full PWA support
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    // navigator.serviceWorker.register('/sw.js')
-    //   .then(registration => console.log('SW registered'))
-    //   .catch(error => console.log('SW registration failed'));
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      console.log("✅ Service Worker registered successfully:", registration);
+
+      // Check for updates
+      registration.addEventListener("updatefound", () => {
+        const newWorker = registration.installing;
+        newWorker.addEventListener("statechange", () => {
+          if (
+            newWorker.state === "installed" &&
+            navigator.serviceWorker.controller
+          ) {
+            showToast(
+              "Phiên bản mới đã sẵn sàng. Tải lại trang để cập nhật.",
+              "info",
+              5000
+            );
+          }
+        });
+      });
+
+      // Listen for messages from Service Worker
+      navigator.serviceWorker.addEventListener("message", event => {
+        const { type, data } = event.data;
+
+        switch (type) {
+          case "PROCESS_UPLOAD_QUEUE":
+            // Handle queued uploads when back online
+            if (
+              typeof uploadManager !== "undefined" &&
+              uploadManager.processQueuedUploads
+            ) {
+              uploadManager.processQueuedUploads(data);
+            }
+            break;
+
+          case "NETWORK_STATUS":
+            // Handle network status changes
+            if (data.online) {
+              showToast("Kết nối mạng đã được khôi phục", "success");
+            } else {
+              showToast("Mất kết nối mạng - chế độ offline", "warning");
+            }
+            break;
+        }
+      });
+    } catch (error) {
+      console.warn("🔧 Service Worker registration failed:", error);
+    }
   });
 }

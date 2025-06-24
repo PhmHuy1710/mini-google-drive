@@ -374,21 +374,48 @@ router.post(
       .trim()
       .notEmpty()
       .withMessage("Each file ID must be a non-empty string"),
-    body("targetFolderId")
-      .isString()
-      .trim()
-      .notEmpty()
-      .withMessage("Target folder ID is required"),
+    body("targetFolderId").custom(value => {
+      // Allow null, undefined, empty string, or "root" for root folder
+      if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        value === "root"
+      ) {
+        return true;
+      }
+      // Otherwise must be a non-empty string
+      if (typeof value === "string" && value.trim().length > 0) {
+        return true;
+      }
+      throw new Error(
+        "Target folder ID must be a valid folder ID, null, or 'root' for root folder"
+      );
+    }),
   ],
   handleValidationErrors,
   async (req, res) => {
     try {
       const { fileIds, targetFolderId } = req.body;
+
+      // Handle root folder cases
+      const finalTargetFolderId =
+        targetFolderId === "root" ||
+        targetFolderId === "" ||
+        targetFolderId === null
+          ? null
+          : targetFolderId;
+
       console.log(
-        `📁 Moving ${fileIds.length} files to folder: ${targetFolderId}`
+        `📁 Moving ${fileIds.length} files to ${
+          finalTargetFolderId ? `folder: ${finalTargetFolderId}` : "root folder"
+        }`
       );
 
-      const results = await driveService.moveFiles(fileIds, targetFolderId);
+      const results = await driveService.moveFiles(
+        fileIds,
+        finalTargetFolderId
+      );
       res.json({
         success: true,
         moved: results.length,
@@ -416,21 +443,48 @@ router.post(
       .trim()
       .notEmpty()
       .withMessage("Each file ID must be a non-empty string"),
-    body("targetFolderId")
-      .isString()
-      .trim()
-      .notEmpty()
-      .withMessage("Target folder ID is required"),
+    body("targetFolderId").custom(value => {
+      // Allow null, undefined, empty string, or "root" for root folder
+      if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        value === "root"
+      ) {
+        return true;
+      }
+      // Otherwise must be a non-empty string
+      if (typeof value === "string" && value.trim().length > 0) {
+        return true;
+      }
+      throw new Error(
+        "Target folder ID must be a valid folder ID, null, or 'root' for root folder"
+      );
+    }),
   ],
   handleValidationErrors,
   async (req, res) => {
     try {
       const { fileIds, targetFolderId } = req.body;
+
+      // Handle root folder cases
+      const finalTargetFolderId =
+        targetFolderId === "root" ||
+        targetFolderId === "" ||
+        targetFolderId === null
+          ? null
+          : targetFolderId;
+
       console.log(
-        `📁 Copying ${fileIds.length} files to folder: ${targetFolderId}`
+        `📁 Copying ${fileIds.length} files to ${
+          finalTargetFolderId ? `folder: ${finalTargetFolderId}` : "root folder"
+        }`
       );
 
-      const results = await driveService.copyFiles(fileIds, targetFolderId);
+      const results = await driveService.copyFiles(
+        fileIds,
+        finalTargetFolderId
+      );
       res.json({
         success: true,
         copied: results.length,
